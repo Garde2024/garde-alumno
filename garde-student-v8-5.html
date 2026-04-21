@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Garde Method — Mi Entrenamiento</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#080808;color:#f0f0f0;font-family:'Barlow',sans-serif;-webkit-font-smoothing:antialiased}
+.page{display:none;max-width:430px;margin:0 auto;min-height:100vh;flex-direction:column}
+.page.active{display:flex}
+
+/* ACHIEVEMENT MODAL */
+.achievement-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:600;align-items:center;justify-content:center;flex-direction:column;padding:30px}
+.achievement-overlay.show{display:flex}
+.achievement-box{background:#111;border-radius:24px;padding:32px 24px;text-align:center;border:1px solid #1e1e1e;max-width:340px;width:100%;position:relative}
+.achievement-glow{position:absolute;inset:0;border-radius:24px;border:2px solid #FF4D00;opacity:.6;animation:glow 2s ease-in-out infinite}
+@keyframes glow{0%,100%{opacity:.3}50%{opacity:.8}}
+.achievement-emoji{font-size:60px;margin-bottom:12px;display:block}
+.achievement-title{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:28px;text-transform:uppercase;letter-spacing:2px;color:#FF4D00;margin-bottom:8px}
+.achievement-msg{font-size:14px;color:#aaa;line-height:1.5;margin-bottom:24px}
+.achievement-btn{background:#FF4D00;border:none;color:#fff;border-radius:12px;padding:14px 32px;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:16px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;width:100%}
+
+/* LOGIN */
+.login-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px}
+.login-logo{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:34px;letter-spacing:5px;text-transform:uppercase;margin-bottom:6px}
+.login-logo span{color:#FF4D00}
+.login-sub{font-size:12px;color:#555;margin-bottom:40px;letter-spacing:2px;text-transform:uppercase}
+.login-card{width:100%;background:#111;border-radius:16px;padding:28px 20px;border:1px solid #1e1e1e}
+.login-title{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:22px;text-transform:uppercase;letter-spacing:2px;margin-bottom:20px}
+.flbl{font-size:10px;color:#555;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:5px;display:block}
+.inp{width:100%;background:#1a1a1a;border:1px solid #1e1e1e;border-radius:10px;padding:13px 14px;color:#f0f0f0;font-family:'Barlow',sans-serif;font-size:14px;outline:none;margin-bottom:12px;-webkit-appearance:none}
+.inp:focus{border-color:#FF4D00}
+.err{font-size:12px;color:#FF4D00;margin-bottom:10px;text-align:center;min-height:18px}
+.btn-fire{width:100%;padding:15px;border-radius:12px;border:none;background:#FF4D00;color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:16px;letter-spacing:2px;text-transform:uppercase;cursor:pointer}
+
+/* HEADER */
+.hdr{padding:16px 20px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #1e1e1e;background:linear-gradient(180deg,rgba(255,77,0,.06) 0%,transparent 100%)}
+.logo{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:20px;letter-spacing:4px;text-transform:uppercase}
+.logo span{color:#FF4D00}
+.role-tag{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:10px;letter-spacing:2px;padding:5px 12px;background:#00E676;color:#080808;text-transform:uppercase;border-radius:2px;cursor:pointer;border:none}
+
+/* SCROLL */
+.scroll{flex:1;overflow-y:auto;padding:18px 20px 90px}
+
+/* NAV */
+.nav{display:flex;background:#111;border-top:1px solid #1e1e1e;padding:8px 0 6px;position:sticky;bottom:0}
+.nb{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;border:none;background:transparent;color:#444;cursor:pointer;padding:6px;font-family:'Barlow',sans-serif}
+.nb.on{color:#FF4D00}
+.nb svg{width:20px;height:20px}
+.nb span{font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase}
+
+/* HERO */
+.hero{background:#111;border-radius:14px;padding:18px;margin-bottom:16px;border:1px solid #1e1e1e;display:flex;align-items:center;gap:14px}
+.hero-av{width:56px;height:56px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:18px;color:#fff;flex-shrink:0}
+.hero-name{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:22px;text-transform:uppercase;line-height:1}
+.hero-sub{font-size:12px;color:#555;margin-top:3px}
+
+/* DAY SELECTOR */
+.day-strip{display:flex;gap:8px;overflow-x:auto;margin-bottom:16px;padding-bottom:2px;scrollbar-width:none}
+.day-strip::-webkit-scrollbar{display:none}
+.day-btn{flex-shrink:0;padding:9px 16px;border-radius:8px;border:1px solid #1e1e1e;background:#111;color:#555;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.day-btn.active{background:#FF4D00;border-color:#FF4D00;color:#fff}
+
+/* WORKOUT HEADER */
+.wh{background:#111;border-radius:14px;padding:16px;margin-bottom:12px;border:1px solid #1e1e1e;border-left:3px solid #FF4D00}
+.wh-day{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:9px;letter-spacing:2px;color:#FF4D00;text-transform:uppercase;margin-bottom:3px}
+.wh-title{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:22px;text-transform:uppercase;margin-bottom:8px}
+.muscle-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px}
+.mtag{font-size:11px;font-weight:600;padding:3px 9px;border-radius:3px;background:#1a1a1a;color:#555;border:1px solid #1e1e1e}
+.prog-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.prog-lbl{font-size:12px;color:#555}
+.prog-num{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:15px;color:#FF4D00}
+.prog-num.done{color:#00E676}
+.pbar{height:3px;background:#1e1e1e;border-radius:2px;overflow:hidden}
+.pfill{height:100%;background:#FF4D00;border-radius:2px;transition:width .4s}
+.pfill.done{background:#00E676}
+
+/* EXERCISE CARD */
+.ec{background:#111;border-radius:12px;padding:14px;margin-bottom:8px;border:1px solid #1e1e1e;cursor:pointer;display:flex;align-items:center;gap:12px;-webkit-tap-highlight-color:transparent;transition:opacity .2s}
+.ec.done{opacity:.5}
+.chk{width:26px;height:26px;border-radius:8px;border:2px solid #2a2a2a;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s}
+.chk.done{background:#00E676;border-color:#00E676}
+.ec-name{font-size:14px;font-weight:500;transition:all .2s}
+.ec-name.done{text-decoration:line-through;color:#555}
+.ec-det{font-size:11px;color:#555;margin-top:2px}
+.ec-note{font-size:11px;color:#FF9800;margin-top:2px}
+.ec-badge{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:19px;color:#FF4D00;flex-shrink:0;text-align:right;transition:color .2s}
+.ec-badge.done{color:#00E676}
+.ec-rest{font-size:10px;color:#555;text-align:right;margin-top:1px}
+
+/* DONE BANNER */
+.done-banner{background:rgba(0,230,118,.1);border:1px solid rgba(0,230,118,.25);border-radius:12px;padding:16px;text-align:center;margin-bottom:14px}
+.done-icon{font-size:30px;margin-bottom:5px}
+.done-title{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:18px;letter-spacing:1px;color:#00E676;text-transform:uppercase}
+.done-sub{font-size:12px;color:#555;margin-top:3px}
+
+/* MUSCLE GRID */
+.mg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.mc{background:#111;border-radius:12px;padding:14px 8px;text-align:center;border:1px solid #1e1e1e;transition:all .2s}
+.mc.active{border-color:#FF4D00;background:rgba(255,77,0,.08)}
+.mc-ico{font-size:22px;margin-bottom:5px}
+.mc-lbl{font-size:10px;color:#555;font-weight:600;letter-spacing:.5px}
+.mc.active .mc-lbl{color:#ccc}
+
+/* WEEK CARDS */
+.wcard{background:#111;border-radius:12px;padding:14px;margin-bottom:8px;border:1px solid #1e1e1e}
+.wd{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:9px;letter-spacing:2px;color:#FF4D00;text-transform:uppercase;margin-bottom:3px}
+.wt{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:16px;text-transform:uppercase;margin-bottom:7px}
+.wcount{font-size:11px;color:#555;margin-top:5px}
+
+/* PROGRESS */
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:2px;border-radius:14px;overflow:hidden;margin-bottom:14px}
+.scell{background:#111;padding:18px}
+.snum{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:38px;line-height:1}
+.slbl{font-size:11px;color:#555;margin-top:3px}
+.chart-box{background:#1a1a1a;border-radius:12px;padding:14px;margin-bottom:14px}
+.chart-lbl{font-size:10px;color:#555;letter-spacing:1px;text-transform:uppercase;font-weight:600;margin-bottom:12px}
+.chart-bars{display:flex;align-items:flex-end;gap:5px;height:60px}
+.cbw{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.cb{width:100%;background:#2a2a2a;border-radius:2px 2px 0 0;min-height:3px}
+.cb.last{background:#FF4D00}
+.cbl{font-size:9px;color:#555}
+.hist-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #1e1e1e}
+.hist-row:last-child{border-bottom:none}
+.hdate{font-size:12px;color:#555}
+.hnote{font-size:10px;color:#333;margin-top:1px}
+.hw{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:20px}
+
+.slbl2{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#555;margin-bottom:12px}
+.divider{height:1px;background:#1e1e1e;margin:16px 0}
+.empty{text-align:center;padding:40px 20px;color:#444}
+.empty-icon{font-size:40px;margin-bottom:12px;opacity:.6}
+.loading{text-align:center;padding:60px 20px;color:#555;font-size:14px}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="page active" id="page-login">
+  <div class="login-wrap">
+    <div class="login-logo"><span>Garde</span> Method</div>
+    <div class="login-sub">Mi Entrenamiento</div>
+    <div class="login-card">
+      <div class="login-title">Ingresar</div>
+      <label class="flbl">Email</label>
+      <input class="inp" type="email" id="l-email" placeholder="tu@email.com" autocomplete="email"/>
+      <label class="flbl">Contraseña</label>
+      <input class="inp" type="password" id="l-pass" placeholder="••••••••" autocomplete="current-password"/>
+      <div class="err" id="l-err"></div>
+      <button class="btn-fire" id="l-btn">Ingresar</button>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="page" id="page-app">
+  <div class="hdr">
+    <div class="logo"><span>Garde</span> Method</div>
+    <button class="role-tag" id="logout-btn">Salir</button>
+  </div>
+
+  <!-- HOY -->
+  <div id="tab-hoy" class="scroll">
+    <div id="hoy-content"><div class="loading">Cargando...</div></div>
+  </div>
+
+  <!-- MUSCULOS -->
+  <div id="tab-musculos" style="display:none;flex:1;overflow-y:auto;padding:18px 20px 90px">
+    <div class="slbl2" style="margin-bottom:14px">Músculos de hoy</div>
+    <div class="mg" id="muscle-grid"></div>
+    <div class="divider"></div>
+    <div class="slbl2">Semana completa</div>
+    <div id="week-list"></div>
+  </div>
+
+  <!-- PROGRESO -->
+  <div id="tab-progreso" style="display:none;flex:1;overflow-y:auto;padding:18px 20px 90px">
+    <div id="progreso-content"></div>
+  </div>
+
+  <nav class="nav">
+    <button class="nb on" onclick="switchTab('hoy')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <span>Hoy</span>
+    </button>
+    <button class="nb" onclick="switchTab('musculos')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6.5 6.5S3 7 3 10.5c0 1.5.5 3 2 4l-1 5h2l1-4h2v4h2v-4l1.5.5 1 3.5h2l-1-4.5C17 14 18 12 18 10c0-3.5-3.5-4-3.5-4"/></svg>
+      <span>Músculos</span>
+    </button>
+    <button class="nb" onclick="switchTab('progreso')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>
+      <span>Progreso</span>
+    </button>
+  </nav>
+</div>
+
+<!-- ACHIEVEMENT OVERLAY -->
+<div class="achievement-overlay" id="achievement-overlay">
+  <div class="achievement-box" id="achievement-box">
+    <div class="achievement-glow"></div>
+    <span class="achievement-emoji" id="ach-emoji">🏆</span>
+    <div class="achievement-title" id="ach-title">¡Logro!</div>
+    <div class="achievement-msg" id="ach-msg">Mensaje</div>
+    <button class="achievement-btn" id="ach-btn">¡Gracias!</button>
+  </div>
+</div>
+
+<script>
+firebase.initializeApp({
+  apiKey: "AIzaSyDURhnrB62ri8vc0NwFBXriZM9duE_WxR4",
+  authDomain: "garde-method.firebaseapp.com",
+  projectId: "garde-method",
+  storageBucket: "garde-method.firebasestorage.app",
+  messagingSenderId: "545565798873",
+  appId: "1:545565798873:web:0c37d53180c7d91ccae9c8"
+});
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+const MUSCLES = ["Pecho","Espalda","Hombros","Bíceps","Tríceps","Piernas","Glúteos","Core","Cardio"];
+const MUSCLE_EMOJI = {"Pecho":"🫁","Espalda":"🏋️","Hombros":"🔝","Bíceps":"💪","Tríceps":"🦾","Piernas":"🦵","Glúteos":"⚡","Core":"⚙️","Cardio":"❤️"};
+const MONTHS = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+
+let myData = null;
+let myRoutines = [];
+let checked = {};
+let selectedRoutineId = null;
+let currentTab = 'hoy';
+let myUid = null;
+
+// Get today's date key
+function todayKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+}
+
+let weights = {}; // stores weight used per exercise key
+
+// ── AUTH ──────────────────────────────────────────────────────────────────────
+auth.onAuthStateChanged(user => {
+  if (user) {
+    myUid = user.uid;
+    loadMyData(user.uid);
+    loadChecks(user.uid);
+    loadWeights(user.uid);
+    showPage('page-app');
+  } else {
+    myUid = null;
+    checked = {};
+    showPage('page-login');
+  }
+});
+
+document.getElementById('l-btn').onclick = async () => {
+  const email = document.getElementById('l-email').value.trim();
+  const pass = document.getElementById('l-pass').value;
+  const errEl = document.getElementById('l-err');
+  errEl.textContent = '';
+  if (!email || !pass) { errEl.textContent = 'Completá email y contraseña'; return; }
+  document.getElementById('l-btn').textContent = 'Ingresando...';
+  try {
+    await auth.signInWithEmailAndPassword(email, pass);
+    document.getElementById('l-btn').textContent = 'Ingresar';
+  } catch(e) {
+    errEl.textContent = 'Email o contraseña incorrectos';
+    document.getElementById('l-btn').textContent = 'Ingresar';
+  }
+};
+
+document.getElementById('l-pass').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('l-btn').click();
+});
+
+document.getElementById('logout-btn').onclick = () => auth.signOut();
+
+// ── LOAD DATA ─────────────────────────────────────────────────────────────────
+function loadMyData(uid) {
+  db.collection('students').doc(uid).onSnapshot(snap => {
+    if (!snap.exists) return;
+    myData = { id: snap.id, ...snap.data() };
+    loadRoutines(uid);
+    renderProgreso();
+    checkAchievements(myData);
+  });
+}
+
+function loadRoutines(uid) {
+  db.collection('students').doc(uid).collection('routines').onSnapshot(snap => {
+    // Only show active routines (not archived)
+    myRoutines = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(r => r.status !== 'archived');
+    if (!selectedRoutineId && myRoutines.length > 0) selectedRoutineId = myRoutines[0].id;
+    // Reset selectedRoutineId if it no longer exists in active routines
+    if (selectedRoutineId && !myRoutines.find(r => r.id === selectedRoutineId)) {
+      selectedRoutineId = myRoutines.length > 0 ? myRoutines[0].id : null;
+    }
+    renderHoy();
+    renderMusculos();
+    renderWeekList();
+  });
+}
+
+// ── RENDER HOY ────────────────────────────────────────────────────────────────
+function renderHoy() {
+  if (!myData) return;
+  const el = document.getElementById('hoy-content');
+
+  const heroHtml = `
+    <div class="hero">
+      <div class="hero-av" style="background:${myData.color||'#FF4D00'}">${myData.avatar||'??'}</div>
+      <div>
+        <div class="hero-name">${myData.name}</div>
+        <div class="hero-sub">${myData.goal||''} · ${myData.attendance||0} asistencias</div>
+      </div>
+    </div>`;
+
+  if (!myRoutines.length) {
+    el.innerHTML = heroHtml + '<div class="empty"><div class="empty-icon">💪</div><div style="font-size:14px;font-weight:600;color:#f0f0f0">Tu semana está lista</div><div style="font-size:12px;color:#555;margin-top:6px">Tu entrenador está preparando las rutinas de esta semana</div></div>';
+    return;
+  }
+
+  const dayStrip = `<div class="day-strip">${myRoutines.map(r => `
+    <button class="day-btn ${r.id === selectedRoutineId ? 'active' : ''}" onclick="selectRoutine('${r.id}')">${r.day}</button>`).join('')}</div>`;
+
+  const r = myRoutines.find(x => x.id === selectedRoutineId) || myRoutines[0];
+  if (!r) { el.innerHTML = heroHtml + dayStrip; return; }
+
+  const exs = r.exercises || [];
+  const doneCount = exs.filter((_,i) => checked[`${r.id}-${i}`]).length;
+  const total = exs.length;
+  const allDone = total > 0 && doneCount === total;
+  const pct = total > 0 ? Math.round(doneCount/total*100) : 0;
+
+  const wh = `
+    <div class="wh">
+      <div class="wh-day">${r.day}</div>
+      <div class="wh-title">${r.label}</div>
+      <div class="muscle-tags">${(r.muscles||[]).map(m=>`<span class="mtag">${m}</span>`).join('')}</div>
+      <div class="prog-row">
+        <span class="prog-lbl">${doneCount}/${total} ejercicios</span>
+        <span class="prog-num ${allDone?'done':''}">${pct}%</span>
+      </div>
+      <div class="pbar"><div class="pfill ${allDone?'done':''}" style="width:${pct}%"></div></div>
+    </div>`;
+
+  const banner = allDone ? `
+    <div class="done-banner">
+      <div class="done-icon">🏆</div>
+      <div class="done-title">¡Entrenamiento completado!</div>
+      <div class="done-sub">Gran trabajo hoy, ${myData.name.split(' ')[0]}.</div>
+    </div>` : '';
+
+  const exList = exs.map((ex, i) => {
+    const k = `${r.id}-${i}`;
+    const d = !!checked[k];
+    const w = weights[k] || '';
+    const lastW = weights[`prev-${k}`] || '';
+    return `
+      <div class="ec ${d?'done':''}" style="flex-direction:column;align-items:stretch;gap:0">
+        <div style="display:flex;align-items:center;gap:12px" onclick="toggleEx('${k}')">
+          <div class="chk ${d?'done':''}">${d?'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#080808" stroke-width="3"><polyline points="20,6 9,17 4,12"/></svg>':''}</div>
+          <div style="flex:1">
+            <div class="ec-name ${d?'done':''}">${ex.name}</div>
+            <div class="ec-det">${ex.sets} series × ${ex.reps} reps · ${ex.rest}</div>
+            ${ex.note?`<div class="ec-note">↳ ${ex.note}</div>`:''}
+            ${ex.video?`<a href="${ex.video}" target="_blank" onclick="event.stopPropagation()" style="display:inline-block;margin-top:6px;font-size:11px;font-weight:700;color:#FF4D00;text-decoration:none;padding:4px 12px;border:1px solid #FF4D00;border-radius:20px;letter-spacing:.5px">▶ Ver video</a>`:''}
+          </div>
+          <div>
+            <div class="ec-badge ${d?'done':''}">${ex.sets}×${ex.reps}</div>
+            <div class="ec-rest">${ex.rest}</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid #1e1e1e" onclick="event.stopPropagation()">
+          <div style="font-size:11px;color:#555;font-weight:600;flex-shrink:0">Carga usada:</div>
+          <input 
+            type="number" 
+            placeholder="kg" 
+            value="${w}"
+            onclick="event.stopPropagation()"
+            onchange="saveWeight('${k}', this.value)"
+            style="width:70px;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;padding:6px 10px;color:#f0f0f0;font-size:13px;font-weight:700;outline:none;-webkit-appearance:none"
+          />
+          <div style="font-size:11px;color:#555">kg</div>
+          ${lastW ? `<div style="font-size:11px;color:#555;margin-left:4px">· Anterior: <span style="color:#FF4D00;font-weight:700">${lastW}kg</span></div>` : ''}
+        </div>
+      </div>`;
+  }).join('');
+
+  el.innerHTML = heroHtml + dayStrip + wh + banner +
+    `<div class="slbl2">Ejercicios</div>` + exList;
+}
+
+function loadChecks(uid) {
+  const key = todayKey();
+  db.collection('students').doc(uid).collection('checks').doc(key).onSnapshot(snap => {
+    if (snap.exists) {
+      checked = snap.data().exercises || {};
+    } else {
+      checked = {};
+    }
+    renderHoy();
+  });
+}
+
+function loadWeights(uid) {
+  const key = todayKey();
+  // Load today's weights
+  db.collection('students').doc(uid).collection('weights').doc(key).onSnapshot(snap => {
+    if (snap.exists) {
+      const todayW = snap.data().exercises || {};
+      Object.keys(todayW).forEach(k => weights[k] = todayW[k]);
+    }
+    renderHoy();
+  });
+  // Load previous session weights for comparison
+  db.collection('students').doc(uid).collection('weights')
+    .orderBy('date', 'desc').limit(2).get().then(snap => {
+      snap.docs.forEach((d, idx) => {
+        if (idx > 0) { // skip today, get previous
+          const prevW = d.data().exercises || {};
+          Object.keys(prevW).forEach(k => weights[`prev-${k}`] = prevW[k]);
+        }
+      });
+      renderHoy();
+    }).catch(() => {});
+}
+
+async function saveWeight(k, val) {
+  if (!myUid || !val) return;
+  const key = todayKey();
+  weights[k] = val;
+  try {
+    await db.collection('students').doc(myUid).collection('weights').doc(key).set({
+      exercises: weights,
+      date: key
+    }, { merge: true });
+  } catch(e) {}
+}
+
+function selectRoutine(id) {
+  selectedRoutineId = id;
+  renderHoy();
+}
+
+async function toggleEx(k) {
+  checked[k] = !checked[k];
+  renderHoy();
+  // Save to Firebase
+  if (myUid) {
+    const key = todayKey();
+    await db.collection('students').doc(myUid).collection('checks').doc(key).set({
+      exercises: checked,
+      date: key
+    });
+  }
+}
+
+// ── RENDER MUSCULOS ───────────────────────────────────────────────────────────
+function renderMusculos() {
+  const r = myRoutines.find(x => x.id === selectedRoutineId) || myRoutines[0];
+  const activeM = r ? (r.muscles||[]) : [];
+  document.getElementById('muscle-grid').innerHTML = MUSCLES.map(m => `
+    <div class="mc ${activeM.includes(m)?'active':''}">
+      <div class="mc-ico">${MUSCLE_EMOJI[m]||'💪'}</div>
+      <div class="mc-lbl">${m}</div>
+    </div>`).join('');
+}
+
+function renderWeekList() {
+  document.getElementById('week-list').innerHTML = myRoutines.length === 0
+    ? '<div class="empty"><div class="empty-icon">📋</div><div style="font-size:14px">Sin rutinas asignadas</div></div>'
+    : myRoutines.map(r => `
+      <div class="wcard">
+        <div class="wd">${r.day}</div>
+        <div class="wt">${r.label}</div>
+        <div class="muscle-tags">${(r.muscles||[]).map(m=>`<span class="mtag">${m}</span>`).join('')}</div>
+        <div class="wcount">${(r.exercises||[]).length} ejercicios</div>
+      </div>`).join('');
+}
+
+// ── RENDER PROGRESO ───────────────────────────────────────────────────────────
+function renderProgreso() {
+  if (!myData) return;
+  const history = myData.history || [];
+  const att = myData.attendance || 0;
+  const total = myData.totalSessions || 0;
+  const pct = total > 0 ? Math.round(att/total*100) : 0;
+
+  let chartHtml = '';
+  if (history.length >= 2) {
+    const ws = history.map(h => h.weight);
+    const mn = Math.min(...ws) - .5, mx = Math.max(...ws) + .5;
+    const norm = w => Math.max(6, ((w-mn)/(mx-mn))*100);
+    const rev = [...history].reverse();
+    chartHtml = `<div class="chart-box">
+      <div class="chart-lbl">Evolución de peso — kg</div>
+      <div class="chart-bars">
+        ${rev.map((h,i) => `<div class="cbw"><div class="cb ${i===rev.length-1?'last':''}" style="height:${norm(h.weight)}%"></div><div class="cbl">${h.date.split(' ')[0]}</div></div>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  document.getElementById('progreso-content').innerHTML = `
+    <div class="slbl2">Mi Progreso</div>
+    <div class="sgrid">
+      <div class="scell"><div class="snum">${att}</div><div class="slbl">Asistencias</div></div>
+      <div class="scell"><div class="snum">${pct}%</div><div class="slbl">% Asistencia</div></div>
+    </div>
+    <div style="background:#111;border-radius:14px;padding:0 14px;margin-bottom:14px;border:1px solid #1e1e1e">
+      <div style="padding:12px 0 8px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:12px;color:#555;font-weight:600">Asistencia del mes</span>
+        <span style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:15px;color:#FF4D00">${att}/${total}</span>
+      </div>
+      <div class="pbar" style="margin-bottom:14px"><div class="pfill" style="width:${pct}%"></div></div>
+    </div>
+    ${chartHtml}
+    <div class="slbl2">Historial de peso</div>
+    ${history.length === 0
+      ? '<div style="text-align:center;padding:20px;color:#555;font-size:13px">Sin registros aún</div>'
+      : `<div style="background:#111;border-radius:14px;padding:0 14px;border:1px solid #1e1e1e">
+          ${history.map(h => `<div class="hist-row"><div><div class="hdate">${h.date}</div>${h.note?`<div class="hnote">${h.note}</div>`:''}</div><div class="hw">${h.weight} <span style="font-size:12px;color:#555">kg</span></div></div>`).join('')}
+        </div>`}
+  `;
+}
+
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  ['hoy','musculos','progreso'].forEach(t => {
+    const el = document.getElementById('tab-'+t);
+    if (el) el.style.display = t === tab ? (t === 'hoy' ? 'block' : 'block') : 'none';
+  });
+  document.querySelectorAll('.nb').forEach((b,i) => {
+    b.classList.toggle('on', ['hoy','musculos','progreso'][i] === tab);
+  });
+  if (tab === 'musculos') { renderMusculos(); renderWeekList(); }
+  if (tab === 'progreso') renderProgreso();
+}
+
+// ── ACHIEVEMENT BUTTON EVENTS ─────────────────────────────────────────────────
+const achBtn = document.getElementById('ach-btn');
+const achOverlay = document.getElementById('achievement-overlay');
+
+function handleAchClose(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  closeAchievement();
+}
+
+achBtn.addEventListener('touchend', handleAchClose, { passive: false });
+achBtn.addEventListener('click', handleAchClose);
+achOverlay.addEventListener('touchend', (e) => {
+  if (e.target === achOverlay) { e.preventDefault(); closeAchievement(); }
+}, { passive: false });
+achOverlay.addEventListener('click', (e) => {
+  if (e.target === achOverlay) closeAchievement();
+});
+const ACHIEVEMENTS = [
+  // Asistencia
+  { id: 'first_login', emoji: '👋', title: '¡Bienvenido!', msg: name => `Hola ${name}! Tu entrenamiento personalizado está listo. ¡Vamos a lograr tus objetivos juntos!`, check: (d) => true },
+  { id: 'att_10', emoji: '🔥', title: '¡10 Asistencias!', msg: () => '10 sesiones completadas. La constancia es la clave del éxito. ¡Seguí así!', check: (d) => (d.attendance||0) >= 10 },
+  { id: 'att_25', emoji: '💪', title: '¡25 Asistencias!', msg: () => '25 sesiones. Ya sos parte del grupo que lo hace en serio. ¡Orgullo!', check: (d) => (d.attendance||0) >= 25 },
+  { id: 'att_50', emoji: '🏅', title: '¡50 Asistencias!', msg: () => '50 sesiones completadas. Eso es dedicación real. ¡Sos un ejemplo!', check: (d) => (d.attendance||0) >= 50 },
+  { id: 'att_100', emoji: '🏆', title: '¡100 Asistencias!', msg: () => '100 sesiones. Sos una máquina. Muy pocos llegan acá. ¡Respeto total!', check: (d) => (d.attendance||0) >= 100 },
+  // Peso corporal
+  { id: 'weight_3kg', emoji: '⬇️', title: '¡-3 kg!', msg: () => 'Bajaste 3kg desde que arrancaste. ¡El trabajo se ve!', check: (d) => { const h = d.history||[]; return h.length >= 2 && (h[h.length-1].weight - h[0].weight) <= -3; }},
+  { id: 'weight_5kg', emoji: '🎯', title: '¡-5 kg!', msg: () => '5kg menos desde el inicio. ¡Esto es un cambio real en tu vida!', check: (d) => { const h = d.history||[]; return h.length >= 2 && (h[h.length-1].weight - h[0].weight) <= -5; }},
+  { id: 'weight_10kg', emoji: '🌟', title: '¡-10 kg!', msg: () => '10kg de diferencia. ¡Impresionante! Sos otra persona. ¡Felicitaciones!', check: (d) => { const h = d.history||[]; return h.length >= 2 && (h[h.length-1].weight - h[0].weight) <= -10; }},
+  // Tiempo
+  { id: 'month_1', emoji: '📅', title: '¡1 Mes!', msg: () => 'Un mes entrenando con Garde Method. Ya es un hábito. ¡Eso vale oro!', check: (d) => { if (!d.createdAt) return false; const diff = (Date.now() - new Date(d.createdAt).getTime()) / (1000*60*60*24); return diff >= 30; }},
+  { id: 'month_3', emoji: '🚀', title: '¡3 Meses!', msg: () => '3 meses de constancia. Los cambios físicos y mentales ya son evidentes. ¡Seguí!', check: (d) => { if (!d.createdAt) return false; const diff = (Date.now() - new Date(d.createdAt).getTime()) / (1000*60*60*24); return diff >= 90; }},
+];
+
+let achievementsQueue = [];
+let showingAchievement = false;
+
+async function checkAchievements(data) {
+  if (!myUid || !data) return;
+  try {
+    const snap = await db.collection('students').doc(myUid).collection('achievements').doc('unlocked').get();
+    const unlocked = snap.exists ? (snap.data().ids || []) : [];
+    const newUnlocked = [];
+
+    for (const ach of ACHIEVEMENTS) {
+      if (!unlocked.includes(ach.id) && ach.check(data)) {
+        newUnlocked.push(ach.id);
+        achievementsQueue.push(ach);
+      }
+    }
+
+    if (newUnlocked.length) {
+      await db.collection('students').doc(myUid).collection('achievements').doc('unlocked').set({
+        ids: [...unlocked, ...newUnlocked]
+      });
+      showNextAchievement(data.name || '');
+    }
+  } catch(e) {}
+}
+
+function showNextAchievement(name) {
+  if (showingAchievement || achievementsQueue.length === 0) return;
+  const ach = achievementsQueue.shift();
+  showingAchievement = true;
+  document.getElementById('ach-emoji').textContent = ach.emoji;
+  document.getElementById('ach-title').textContent = ach.title;
+  document.getElementById('ach-msg').textContent = ach.msg(name);
+  document.getElementById('achievement-overlay').classList.add('show');
+}
+
+function closeAchievement() {
+  document.getElementById('achievement-overlay').classList.remove('show');
+  showingAchievement = false;
+  const name = myData ? myData.name.split(' ')[0] : '';
+  if (achievementsQueue.length > 0) {
+    setTimeout(() => showNextAchievement(name), 600);
+  }
+}
+</script>
+</body>
+</html>
