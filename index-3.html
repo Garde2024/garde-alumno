@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Garde Method — Mi Entrenamiento</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#080808;color:#f0f0f0;font-family:'Barlow',sans-serif;-webkit-font-smoothing:antialiased}
+.page{display:none;max-width:430px;margin:0 auto;min-height:100vh;flex-direction:column}
+.page.active{display:flex}
+.login-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px}
+.login-logo{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:34px;letter-spacing:5px;text-transform:uppercase;margin-bottom:6px}
+.login-logo span{color:#FF4D00}
+.login-sub{font-size:12px;color:#555;margin-bottom:40px;letter-spacing:2px;text-transform:uppercase}
+.login-card{width:100%;background:#111;border-radius:16px;padding:28px 20px;border:1px solid #1e1e1e}
+.login-title{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:22px;text-transform:uppercase;letter-spacing:2px;margin-bottom:20px}
+.flbl{font-size:10px;color:#555;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:5px;display:block}
+.inp{width:100%;background:#1a1a1a;border:1px solid #1e1e1e;border-radius:10px;padding:13px 14px;color:#f0f0f0;font-family:'Barlow',sans-serif;font-size:14px;outline:none;margin-bottom:12px;-webkit-appearance:none}
+.inp:focus{border-color:#FF4D00}
+.err{font-size:12px;color:#FF4D00;margin-bottom:10px;text-align:center;min-height:18px}
+.btn-fire{width:100%;padding:15px;border-radius:12px;border:none;background:#FF4D00;color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:16px;letter-spacing:2px;text-transform:uppercase;cursor:pointer}
+.hdr{padding:16px 20px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #1e1e1e;background:linear-gradient(180deg,rgba(255,77,0,.06) 0%,transparent 100%)}
+.logo{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:20px;letter-spacing:4px;text-transform:uppercase}
+.logo span{color:#FF4D00}
+.role-tag{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:10px;letter-spacing:2px;padding:5px 12px;background:#00E676;color:#080808;text-transform:uppercase;border-radius:2px;cursor:pointer;border:none}
+.scroll{flex:1;overflow-y:auto;padding:18px 20px 90px}
+.nav{display:flex;background:#111;border-top:1px solid #1e1e1e;padding:8px 0 6px;position:sticky;bottom:0}
+.nb{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;border:none;background:transparent;color:#444;cursor:pointer;padding:6px;font-family:'Barlow',sans-serif}
+.nb.on{color:#FF4D00}
+.nb svg{width:20px;height:20px}
+.nb span{font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase}
+.hero{background:#111;border-radius:14px;padding:18px;margin-bottom:16px;border:1px solid #1e1e1e;display:flex;align-items:center;gap:14px}
+.hero-av{width:56px;height:56px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:18px;color:#fff;flex-shrink:0}
+.hero-name{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:22px;text-transform:uppercase;line-height:1}
+.hero-sub{font-size:12px;color:#555;margin-top:3px}
+.day-strip{display:flex;gap:8px;overflow-x:auto;margin-bottom:16px;padding-bottom:2px;scrollbar-width:none}
+.day-strip::-webkit-scrollbar{display:none}
+.day-btn{flex-shrink:0;padding:9px 16px;border-radius:8px;border:1px solid #1e1e1e;background:#111;color:#555;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.day-btn.active{background:#FF4D00;border-color:#FF4D00;color:#fff}
+.wh{background:#111;border-radius:14px;padding:16px;margin-bottom:12px;border:1px solid #1e1e1e;border-left:3px solid #FF4D00}
+.wh-day{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:9px;letter-spacing:2px;color:#FF4D00;text-transform:uppercase;margin-bottom:3px}
+.wh-title{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:22px;text-transform:uppercase;margin-bottom:8px}
+.muscle-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px}
+.mtag{font-size:11px;font-weight:600;padding:3px 9px;border-radius:3px;background:#1a1a1a;color:#555;border:1px solid #1e1e1e}
+.prog-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.prog-lbl{font-size:12px;color:#555}
+.prog-num{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:15px;color:#FF4D00}
+.prog-num.done{color:#00E676}
+.pbar{height:3px;background:#1e1e1e;border-radius:2px;overflow:hidden}
+.pfill{height:100%;background:#FF4D00;border-radius:2px;transition:width .4s}
+.pfill.done{background:#00E676}
+.ec{background:#111;border-radius:12px;padding:14px;margin-bottom:8px;border:1px solid #1e1e1e;cursor:pointer;display:flex;align-items:center;gap:12px;-webkit-tap-highlight-color:transparent;transition:opacity .2s}
+.ec.done{opacity:.5}
+.ss-group{background:#111;border-radius:12px;margin-bottom:8px;border:1px solid #1e1e1e;border-left:4px solid #FF4D00;overflow:hidden;transition:opacity .2s}
+.ss-group.done{opacity:.5}
+.ss-header{padding:10px 14px 8px;background:rgba(255,77,0,0.06);border-bottom:1px solid #1e1e1e}
+.ss-tag{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:11px;letter-spacing:2px;color:#FF4D00;text-transform:uppercase}
+.ss-hint{font-size:10px;color:#666;margin-top:2px}
+.ss-item{padding:12px 14px;border-bottom:1px dashed #1e1e1e}
+.ss-item:last-of-type{border-bottom:none}
+.ss-item-head{display:flex;align-items:flex-start;gap:10px}
+.ss-num{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:15px;color:#FF4D00;min-width:24px;flex-shrink:0;margin-top:2px}
+.ss-name{font-size:14px;font-weight:500}
+.ss-name.done{text-decoration:line-through;color:#555}
+.ss-det{font-size:11px;color:#666;margin-top:2px}
+.ss-note{font-size:11px;color:#888;font-style:italic;margin-top:3px}
+.ss-badge{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:17px;color:#FF4D00;flex-shrink:0}
+.ss-weight-row{display:flex;align-items:center;gap:8px;margin-top:8px;padding-top:8px;border-top:1px solid #1a1a1a}
+.ss-footer{padding:12px 14px;background:#0a0a0a;display:flex;align-items:center;gap:12px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.ss-rest{font-size:11px;color:#666;margin-left:auto;flex-shrink:0}
+.ss-complete-lbl{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:13px;letter-spacing:1px;text-transform:uppercase;color:#f0f0f0}
+.ss-complete-lbl.done{color:#555;text-decoration:line-through}
+.chk{width:26px;height:26px;border-radius:8px;border:2px solid #2a2a2a;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s}
+.chk.done{background:#00E676;border-color:#00E676}
+.ec-name{font-size:14px;font-weight:500;transition:all .2s}
+.ec-name.done{text-decoration:line-through;color:#555}
+.ec-det{font-size:11px;color:#555;margin-top:2px}
+.ec-note{font-size:11px;color:#FF9800;margin-top:2px}
+.ec-badge{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:19px;color:#FF4D00;flex-shrink:0;text-align:right;transition:color .2s}
+.ec-badge.done{color:#00E676}
+.ec-rest{font-size:10px;color:#555;text-align:right;margin-top:1px}
+.done-banner{background:rgba(0,230,118,.1);border:1px solid rgba(0,230,118,.25);border-radius:12px;padding:16px;text-align:center;margin-bottom:14px}
+.done-icon{font-size:30px;margin-bottom:5px}
+.done-title{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:18px;letter-spacing:1px;color:#00E676;text-transform:uppercase}
+.done-sub{font-size:12px;color:#555;margin-top:3px}
+.mg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.mc{background:#111;border-radius:12px;padding:14px 8px;text-align:center;border:1px solid #1e1e1e;transition:all .2s}
+.mc.active{border-color:#FF4D00;background:rgba(255,77,0,.08)}
+.mc-ico{font-size:22px;margin-bottom:5px}
+.mc-lbl{font-size:10px;color:#555;font-weight:600;letter-spacing:.5px}
+.mc.active .mc-lbl{color:#ccc}
+.wcard{background:#111;border-radius:12px;padding:14px;margin-bottom:8px;border:1px solid #1e1e1e}
+.wd{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:9px;letter-spacing:2px;color:#FF4D00;text-transform:uppercase;margin-bottom:3px}
+.wt{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:16px;text-transform:uppercase;margin-bottom:7px}
+.wcount{font-size:11px;color:#555;margin-top:5px}
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:2px;border-radius:14px;overflow:hidden;margin-bottom:14px}
+.scell{background:#111;padding:18px}
+.snum{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:38px;line-height:1}
+.slbl{font-size:11px;color:#555;margin-top:3px}
+.chart-box{background:#1a1a1a;border-radius:12px;padding:14px;margin-bottom:14px}
+.chart-lbl{font-size:10px;color:#555;letter-spacing:1px;text-transform:uppercase;font-weight:600;margin-bottom:12px}
+.chart-bars{display:flex;align-items:flex-end;gap:5px;height:60px}
+.cbw{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.cb{width:100%;background:#2a2a2a;border-radius:2px 2px 0 0;min-height:3px}
+.cb.last{background:#FF4D00}
+.cbl{font-size:9px;color:#555}
+.hist-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #1e1e1e}
+.hist-row:last-child{border-bottom:none}
+.hdate{font-size:12px;color:#555}
+.hnote{font-size:10px;color:#333;margin-top:1px}
+.hw{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:20px}
+.slbl2{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#555;margin-bottom:12px}
+.divider{height:1px;background:#1e1e1e;margin:16px 0}
+.empty{text-align:center;padding:40px 20px;color:#444}
+.empty-icon{font-size:40px;margin-bottom:12px;opacity:.6}
+.loading{text-align:center;padding:60px 20px;color:#555;font-size:14px}
+.timer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:500;flex-direction:column;align-items:center;justify-content:center;padding:30px}
+.timer-overlay.show{display:flex}
+.timer-label{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;letter-spacing:3px;text-transform:uppercase;color:#555;margin-bottom:16px}
+.timer-circle{width:200px;height:200px;border-radius:50%;border:4px solid #1e1e1e;display:flex;align-items:center;justify-content:center;position:relative;margin-bottom:24px}
+.timer-num{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:72px;color:#f0f0f0;line-height:1}
+.timer-sec{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:20px;color:#555}
+.timer-ex{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:18px;text-transform:uppercase;color:#f0f0f0;margin-bottom:8px;text-align:center}
+.timer-next{font-size:12px;color:#555;margin-bottom:32px;text-align:center}
+.timer-skip{background:#1a1a1a;border:1px solid #1e1e1e;color:#555;border-radius:12px;padding:14px 32px;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:14px;letter-spacing:2px;text-transform:uppercase;cursor:pointer}
+.achievement-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:600;align-items:center;justify-content:center;flex-direction:column;padding:30px}
+.achievement-overlay.show{display:flex}
+.achievement-box{background:#111;border-radius:24px;padding:32px 24px;text-align:center;border:1px solid #1e1e1e;max-width:340px;width:100%;position:relative}
+.achievement-glow{position:absolute;inset:0;border-radius:24px;border:2px solid #FF4D00;opacity:.6;animation:glow 2s ease-in-out infinite}
+@keyframes glow{0%,100%{opacity:.3}50%{opacity:.8}}
+.achievement-emoji{font-size:60px;margin-bottom:12px;display:block}
+.achievement-title{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:28px;text-transform:uppercase;letter-spacing:2px;color:#FF4D00;margin-bottom:8px}
+.achievement-msg{font-size:14px;color:#aaa;line-height:1.5;margin-bottom:24px}
+.achievement-btn{background:#FF4D00;border:none;color:#fff;border-radius:12px;padding:14px 32px;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:16px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;width:100%}
+</style>
+</head>
+<body>
+
+<div class="page active" id="page-login">
+  <div class="login-wrap">
+    <div class="login-logo"><span>Garde</span> Method</div>
+    <div class="login-sub">Mi Entrenamiento</div>
+    <div class="login-card">
+      <div class="login-title">Ingresar</div>
+      <label class="flbl">Email</label>
+      <input class="inp" type="email" id="l-email" placeholder="tu@email.com" autocomplete="email"/>
+      <label class="flbl">Contraseña</label>
+      <input class="inp" type="password" id="l-pass" placeholder="••••••••" autocomplete="current-password"/>
+      <div class="err" id="l-err"></div>
+      <button class="btn-fire" id="l-btn">Ingresar</button>
+      <button id="resend-verification" style="display:none;width:100%;margin-top:8px;padding:12px;border-radius:12px;border:1px solid #1e1e1e;background:#1a1a1a;color:#FF4D00;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:13px;letter-spacing:1px;cursor:pointer" onclick="resendVerification()">Reenviar email de verificación</button>
+    </div>
+  </div>
+</div>
+
+<div class="page" id="page-app">
+  <div class="hdr">
+    <div class="logo"><span>Garde</span> Method</div>
+    <button class="role-tag" id="logout-btn">Salir</button>
+  </div>
+
+  <div id="tab-hoy" class="scroll">
+    <div id="hoy-content"><div class="loading">Cargando...</div></div>
+  </div>
+
+  <div id="tab-musculos" style="display:none;flex:1;overflow-y:auto;padding:18px 20px 90px">
+    <div class="slbl2" style="margin-bottom:14px">Músculos de hoy</div>
+    <div style="display:flex;gap:12px;justify-content:center;margin-bottom:20px">
+      <div style="text-align:center">
+        <div style="font-size:10px;color:#555;letter-spacing:1px;margin-bottom:6px;font-weight:600">FRENTE</div>
+        <svg id="body-front" viewBox="0 0 120 280" width="130" height="260" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="60" cy="22" rx="16" ry="18" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1"/>
+          <rect x="54" y="38" width="12" height="12" rx="3" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1"/>
+          <ellipse id="f-hombros-l" cx="28" cy="58" rx="14" ry="10" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1" class="muscle-zone" data-muscle="Hombros"/>
+          <ellipse id="f-hombros-r" cx="92" cy="58" rx="14" ry="10" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1" class="muscle-zone" data-muscle="Hombros"/>
+          <path id="f-pecho-l" d="M42 52 Q52 48 58 55 L56 78 Q46 80 38 72 Z" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1" class="muscle-zone" data-muscle="Pecho"/>
+          <path id="f-pecho-r" d="M78 52 Q68 48 62 55 L64 78 Q74 80 82 72 Z" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1" class="muscle-zone" data-muscle="Pecho"/>
+          <rect id="f-core-1" x="52" y="80" width="16" height="14" rx="3" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1" class="muscle-zone" data-muscle="Core"/>
+          <rect id="f-core-2" x="52" y="96" width="16" height="14" rx="3" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1" class="muscle-zone" data-muscle="Core"/>
+          <rect id="f-core-3" x="52" y="112" width="16" height="12" rx="3" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1" class="muscle-zone" data-muscle="Core"/>
+          <ellipse id="f-biceps-l" cx="22" cy="85" rx="8" ry="18" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1" class="muscle-zone" data-muscle="Bíceps"/>
+          <ellipse id="f-biceps-r" cx="98" cy="85" rx="8" ry="18" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1" class="muscle-zone" data-muscle="Bíceps"/>
+          <ellipse cx="18" cy="118" rx="6" ry="16" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1"/>
+          <ellipse cx="102" cy="118" rx="6" ry="16" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1"/>
+          <path d="M38 72 Q32 90 34 112 L42 108 Q40 88 44 78 Z" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1"/>
+          <path d="M82 72 Q88 90 86 112 L78 108 Q80 88 76 78 Z" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1"/>
+          <path d="M34 112 Q40 126 60 128 Q80 126 86 112 L78 108 Q74 120 60 122 Q46 120 42 108 Z" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1"/>
+          <path id="f-piernas-l" d="M42 128 Q36 148 38 172 L50 172 Q50 150 52 128 Z" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1" class="muscle-zone" data-muscle="Piernas"/>
+          <path id="f-piernas-r" d="M78 128 Q84 148 82 172 L70 172 Q70 150 68 128 Z" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1" class="muscle-zone" data-muscle="Piernas"/>
+          <path d="M52 128 Q56 148 56 172 L50 172 Q50 150 52 128 Z" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="0.5"/>
+          <path d="M68 128 Q64 148 64 172 L70 172 Q70 150 68 128 Z" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="0.5"/>
+          <ellipse cx="44" cy="176" rx="8" ry="6" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1"/>
+          <ellipse cx="76" cy="176" rx="8" ry="6" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1"/>
+          <ellipse cx="44" cy="200" rx="8" ry="18" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1"/>
+          <ellipse cx="76" cy="200" rx="8" ry="18" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1"/>
+          <ellipse cx="44" cy="222" rx="8" ry="5" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1"/>
+          <ellipse cx="76" cy="222" rx="8" ry="5" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1"/>
+          <path id="f-triceps-l" d="M14 68 Q10 80 14 96 L20 94 Q16 80 18 68 Z" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1" class="muscle-zone" data-muscle="Tríceps"/>
+          <path id="f-triceps-r" d="M106 68 Q110 80 106 96 L100 94 Q104 80 102 68 Z" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1" class="muscle-zone" data-muscle="Tríceps"/>
+          <path id="f-gluteos-l" d="M34 116 Q36 132 44 134 L44 128 Q40 126 36 114 Z" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1" class="muscle-zone" data-muscle="Glúteos"/>
+          <path id="f-gluteos-r" d="M86 116 Q84 132 76 134 L76 128 Q80 126 84 114 Z" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1" class="muscle-zone" data-muscle="Glúteos"/>
+        </svg>
+      </div>
+      <div style="text-align:center">
+        <div style="font-size:10px;color:#555;letter-spacing:1px;margin-bottom:6px;font-weight:600">ESPALDA</div>
+        <svg id="body-back" viewBox="0 0 120 280" width="130" height="260" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="60" cy="22" rx="16" ry="18" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1"/>
+          <rect x="54" y="38" width="12" height="12" rx="3" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1"/>
+          <path id="b-hombros-l" d="M44 42 Q34 48 26 56 Q30 62 42 60 Q46 52 48 46 Z" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1" class="muscle-zone" data-muscle="Hombros"/>
+          <path id="b-hombros-r" d="M76 42 Q86 48 94 56 Q90 62 78 60 Q74 52 72 46 Z" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1" class="muscle-zone" data-muscle="Hombros"/>
+          <path id="b-espalda-l" d="M42 56 Q34 70 32 100 L44 104 Q44 76 48 60 Z" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1" class="muscle-zone" data-muscle="Espalda"/>
+          <path id="b-espalda-r" d="M78 56 Q86 70 88 100 L76 104 Q76 76 72 60 Z" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1" class="muscle-zone" data-muscle="Espalda"/>
+          <path d="M44 60 Q52 56 60 56 Q68 56 76 60 L72 100 Q66 96 60 96 Q54 96 48 100 Z" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1"/>
+          <rect x="46" y="100" width="28" height="24" rx="4" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1"/>
+          <path id="b-gluteos-l" d="M34 116 Q36 140 46 144 L50 130 Q44 128 40 116 Z" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1" class="muscle-zone" data-muscle="Glúteos"/>
+          <path id="b-gluteos-r" d="M86 116 Q84 140 74 144 L70 130 Q76 128 80 116 Z" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1" class="muscle-zone" data-muscle="Glúteos"/>
+          <path d="M46 124 Q52 136 60 138 Q68 136 74 124 L70 120 Q66 130 60 132 Q54 130 50 120 Z" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1"/>
+          <ellipse id="b-triceps-l" cx="22" cy="85" rx="8" ry="18" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1" class="muscle-zone" data-muscle="Tríceps"/>
+          <ellipse id="b-triceps-r" cx="98" cy="85" rx="8" ry="18" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1" class="muscle-zone" data-muscle="Tríceps"/>
+          <ellipse cx="16" cy="85" rx="5" ry="14" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="0.5"/>
+          <ellipse cx="104" cy="85" rx="5" ry="14" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="0.5"/>
+          <ellipse cx="18" cy="118" rx="6" ry="16" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1"/>
+          <ellipse cx="102" cy="118" rx="6" ry="16" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1"/>
+          <path id="b-piernas-l" d="M42 144 Q36 162 38 184 L50 184 Q50 164 50 144 Z" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1" class="muscle-zone" data-muscle="Piernas"/>
+          <path id="b-piernas-r" d="M78 144 Q84 162 82 184 L70 184 Q70 164 70 144 Z" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1" class="muscle-zone" data-muscle="Piernas"/>
+          <ellipse cx="44" cy="188" rx="8" ry="6" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1"/>
+          <ellipse cx="76" cy="188" rx="8" ry="6" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1"/>
+          <ellipse cx="44" cy="210" rx="9" ry="18" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1"/>
+          <ellipse cx="76" cy="210" rx="9" ry="18" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1"/>
+          <ellipse cx="44" cy="230" rx="8" ry="5" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1"/>
+          <ellipse cx="76" cy="230" rx="8" ry="5" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1"/>
+        </svg>
+      </div>
+    </div>
+    <div style="display:flex;gap:16px;justify-content:center;margin-bottom:20px">
+      <div style="display:flex;align-items:center;gap:6px"><div style="width:12px;height:12px;border-radius:3px;background:#FF4D00"></div><span style="font-size:11px;color:#555">Trabajado hoy</span></div>
+      <div style="display:flex;align-items:center;gap:6px"><div style="width:12px;height:12px;border-radius:3px;background:#1a1a1a;border:1px solid #2a2a2a"></div><span style="font-size:11px;color:#555">Sin trabajar</span></div>
+    </div>
+    <div class="divider"></div>
+    <div class="slbl2">Semana completa</div>
+    <div id="week-list"></div>
+  </div>
+
+  <div id="tab-progreso" style="display:none;flex:1;overflow-y:auto;padding:18px 20px 90px">
+    <div id="progreso-content"></div>
+  </div>
+
+  <nav class="nav">
+    <button class="nb on" onclick="switchTab('hoy')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <span>Hoy</span>
+    </button>
+    <button class="nb" onclick="switchTab('musculos')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6.5 6.5S3 7 3 10.5c0 1.5.5 3 2 4l-1 5h2l1-4h2v4h2v-4l1.5.5 1 3.5h2l-1-4.5C17 14 18 12 18 10c0-3.5-3.5-4-3.5-4"/></svg>
+      <span>Músculos</span>
+    </button>
+    <button class="nb" onclick="switchTab('progreso')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>
+      <span>Progreso</span>
+    </button>
+  </nav>
+</div>
+
+<div class="timer-overlay" id="timer-overlay">
+  <div class="timer-label" id="timer-label">Descanso</div>
+  <div class="timer-circle" id="timer-circle">
+    <div>
+      <div class="timer-num" id="timer-num">60</div>
+      <div class="timer-sec" style="text-align:center">seg</div>
+    </div>
+  </div>
+  <div class="timer-ex" id="timer-ex-name"></div>
+  <div class="timer-next" id="timer-next-ex"></div>
+  <button class="timer-skip" id="timer-skip-btn">Saltear descanso</button>
+</div>
+
+<div class="timer-overlay" id="timer-picker" style="justify-content:flex-end;padding-bottom:0">
+  <div style="background:#111;border-radius:20px 20px 0 0;padding:24px 20px 40px;width:100%;border-top:1px solid #1e1e1e">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:20px;letter-spacing:2px;text-transform:uppercase;margin-bottom:16px">⏱ Iniciar descanso</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px">
+      <button onclick="startTimerManual(30)" style="background:#1a1a1a;border:1px solid #1e1e1e;border-radius:10px;padding:14px;color:#f0f0f0;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:16px;cursor:pointer">30s</button>
+      <button onclick="startTimerManual(45)" style="background:#1a1a1a;border:1px solid #1e1e1e;border-radius:10px;padding:14px;color:#f0f0f0;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:16px;cursor:pointer">45s</button>
+      <button onclick="startTimerManual(60)" style="background:#FF4D00;border:none;border-radius:10px;padding:14px;color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:16px;cursor:pointer">60s</button>
+      <button onclick="startTimerManual(90)" style="background:#1a1a1a;border:1px solid #1e1e1e;border-radius:10px;padding:14px;color:#f0f0f0;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:16px;cursor:pointer">90s</button>
+      <button onclick="startTimerManual(120)" style="background:#1a1a1a;border:1px solid #1e1e1e;border-radius:10px;padding:14px;color:#f0f0f0;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:16px;cursor:pointer">2 min</button>
+      <button onclick="startTimerManual(180)" style="background:#1a1a1a;border:1px solid #1e1e1e;border-radius:10px;padding:14px;color:#f0f0f0;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:16px;cursor:pointer">3 min</button>
+    </div>
+    <button onclick="closeTimerPicker()" style="width:100%;padding:14px;border-radius:10px;background:#1a1a1a;border:1px solid #1e1e1e;color:#555;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:14px;letter-spacing:1px;cursor:pointer">Cancelar</button>
+  </div>
+</div>
+
+<button id="float-timer-btn" onclick="openTimerPicker()" style="display:none;position:fixed;bottom:75px;right:16px;width:56px;height:56px;border-radius:50%;background:#FF4D00;border:none;color:#fff;font-size:22px;cursor:pointer;z-index:400;box-shadow:0 4px 16px rgba(255,77,0,.4)">⏱</button>
+
+<div class="achievement-overlay" id="achievement-overlay">
+  <div class="achievement-box" id="achievement-box">
+    <div class="achievement-glow"></div>
+    <span class="achievement-emoji" id="ach-emoji">🏆</span>
+    <div class="achievement-title" id="ach-title">¡Logro!</div>
+    <div class="achievement-msg" id="ach-msg">Mensaje</div>
+    <button class="achievement-btn" id="ach-btn">¡Gracias!</button>
+  </div>
+</div>
+
+<script>
+firebase.initializeApp({
+  apiKey: "AIzaSyDURhnrB62ri8vc0NwFBXriZM9duE_WxR4",
+  authDomain: "garde-method.firebaseapp.com",
+  projectId: "garde-method",
+  storageBucket: "garde-method.firebasestorage.app",
+  messagingSenderId: "545565798873",
+  appId: "1:545565798873:web:0c37d53180c7d91ccae9c8"
+});
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+const MUSCLES = ["Pecho","Espalda","Hombros","Bíceps","Tríceps","Piernas","Glúteos","Core","Cardio"];
+const MONTHS = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+
+let myData = null;
+let myRoutines = [];
+let checked = {};
+let selectedRoutineId = null;
+let currentTab = 'hoy';
+let myUid = null;
+let weights = {};
+
+function todayKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+}
+
+async function resendVerification() {
+  const email = document.getElementById('l-email').value.trim();
+  const pass = document.getElementById('l-pass').value;
+  try {
+    const cred = await auth.signInWithEmailAndPassword(email, pass);
+    await cred.user.sendEmailVerification();
+    await auth.signOut();
+    document.getElementById('l-err').textContent = 'Email reenviado. Revisá tu bandeja de entrada.';
+    document.getElementById('resend-verification').style.display = 'none';
+  } catch(e) {}
+}
+
+auth.onAuthStateChanged(user => {
+  if (user) {
+    myUid = user.uid;
+    loadMyData(user.uid);
+    loadChecks(user.uid);
+    loadWeights(user.uid);
+    showPage('page-app');
+    document.getElementById('float-timer-btn').style.display = 'block';
+  } else {
+    myUid = null;
+    checked = {};
+    showPage('page-login');
+  }
+});
+
+document.getElementById('l-btn').onclick = async () => {
+  const email = document.getElementById('l-email').value.trim();
+  const pass = document.getElementById('l-pass').value;
+  const errEl = document.getElementById('l-err');
+  errEl.textContent = '';
+  if (!email || !pass) { errEl.textContent = 'Completá email y contraseña'; return; }
+  document.getElementById('l-btn').textContent = 'Ingresando...';
+  try {
+    await auth.signInWithEmailAndPassword(email, pass);
+    document.getElementById('l-btn').textContent = 'Ingresar';
+  } catch(e) {
+    errEl.textContent = 'Email o contraseña incorrectos';
+    document.getElementById('l-btn').textContent = 'Ingresar';
+  }
+};
+
+document.getElementById('l-pass').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('l-btn').click();
+});
+
+document.getElementById('logout-btn').onclick = () => auth.signOut();
+
+async function markMyAttendance() {
+  if (!myUid || !myData) return;
+  const todayStr = todayKey();
+  if (myData.lastAttendance === todayStr) return;
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = `${yesterday.getFullYear()}-${yesterday.getMonth()+1}-${yesterday.getDate()}`;
+  const currentStreak = myData.lastAttendance === yesterdayStr ? (myData.streak || 0) + 1 : 1;
+  const maxStreak = Math.max(currentStreak, myData.maxStreak || 0);
+  const attendanceDays = myData.attendanceDays || [];
+  if (!attendanceDays.includes(todayStr)) attendanceDays.push(todayStr);
+  await db.collection('students').doc(myUid).update({
+    attendance: (myData.attendance || 0) + 1,
+    totalSessions: (myData.totalSessions || 0) + 1,
+    lastAttendance: todayStr,
+    streak: currentStreak,
+    maxStreak: maxStreak,
+    attendanceDays: attendanceDays
+  });
+}
+
+function loadMyData(uid) {
+  db.collection('students').doc(uid).onSnapshot(snap => {
+    if (!snap.exists) return;
+    myData = { id: snap.id, ...snap.data() };
+    loadRoutines(uid);
+    renderProgreso();
+    checkAchievements(myData);
+    checkPaymentAlert(myData);
+    checkWeeklyReport(myData);
+  });
+}
+
+function loadRoutines(uid) {
+  db.collection('students').doc(uid).collection('routines').onSnapshot(snap => {
+    myRoutines = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(r => r.status !== 'archived');
+    if (!selectedRoutineId && myRoutines.length > 0) selectedRoutineId = myRoutines[0].id;
+    if (selectedRoutineId && !myRoutines.find(r => r.id === selectedRoutineId)) {
+      selectedRoutineId = myRoutines.length > 0 ? myRoutines[0].id : null;
+    }
+    renderHoy();
+    renderMusculos();
+    renderWeekList();
+  });
+}
+
+function renderHoy() {
+  if (!myData) return;
+  const el = document.getElementById('hoy-content');
+  const todayStr = todayKey();
+  const attendedToday = myData.lastAttendance === todayStr;
+  const streak = myData.streak || 0;
+  const maxStreak = myData.maxStreak || 0;
+
+  const streakHtml = streak > 0 ? `
+    <div style="background:#111;border-radius:14px;padding:14px 16px;margin-bottom:14px;border:1px solid #1e1e1e;display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="font-size:28px">${streak >= 7 ? '🔥' : streak >= 3 ? '⚡' : '💪'}</div>
+        <div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:22px;line-height:1">${streak} día${streak===1?'':'s'} seguidos</div>
+          <div style="font-size:11px;color:#555;margin-top:2px">Racha actual</div>
+        </div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:18px;color:#FF4D00">${maxStreak}</div>
+        <div style="font-size:10px;color:#555">Récord</div>
+      </div>
+    </div>` : '';
+
+  const hasMsg = myData.coachMessage && myData.coachMessageExpiry && Date.now() < myData.coachMessageExpiry;
+  const msgHtml = hasMsg ? `
+    <div style="background:linear-gradient(135deg,rgba(255,77,0,.15),rgba(255,77,0,.05));border:1px solid rgba(255,77,0,.3);border-radius:14px;padding:16px;margin-bottom:14px">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:11px;letter-spacing:2px;color:#FF4D00;text-transform:uppercase;margin-bottom:6px">💬 Mensaje de tu entrenador</div>
+      <div style="font-size:14px;color:#f0f0f0;line-height:1.5">${myData.coachMessage}</div>
+      <div style="font-size:10px;color:#555;margin-top:6px">${myData.coachMessageAt||''}</div>
+    </div>` : '';
+
+  const heroHtml = `
+    <div class="hero">
+      <div class="hero-av" style="background:${myData.color||'#FF4D00'}">${myData.avatar||'??'}</div>
+      <div style="flex:1">
+        <div class="hero-name">${myData.name}</div>
+        <div class="hero-sub">${myData.goal||''} · ${myData.attendance||0} asistencias</div>
+      </div>
+    </div>
+    <button onclick="markMyAttendance()" style="width:100%;margin-bottom:14px;padding:14px;border-radius:12px;border:none;background:${attendedToday ? '#1a1a1a' : '#00E676'};color:${attendedToday ? '#555' : '#080808'};font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:15px;letter-spacing:2px;text-transform:uppercase;cursor:${attendedToday ? 'default' : 'pointer'}">
+      ${attendedToday ? '✓ Asistencia registrada hoy' : '📍 Registrar mi asistencia'}
+    </button>`;
+
+  if (!myRoutines.length) {
+    el.innerHTML = heroHtml + streakHtml + msgHtml + '<div class="empty"><div class="empty-icon">💪</div><div style="font-size:14px;font-weight:600;color:#f0f0f0">Tu semana está lista</div><div style="font-size:12px;color:#555;margin-top:6px">Tu entrenador está preparando las rutinas de esta semana</div></div>';
+    return;
+  }
+
+  const dayStrip = `<div class="day-strip">${myRoutines.map(r => `
+    <button class="day-btn ${r.id === selectedRoutineId ? 'active' : ''}" onclick="selectRoutine('${r.id}')">${r.day}</button>`).join('')}</div>`;
+
+  const r = myRoutines.find(x => x.id === selectedRoutineId) || myRoutines[0];
+  if (!r) { el.innerHTML = heroHtml + streakHtml + msgHtml + dayStrip; return; }
+
+  const exs = r.exercises || [];
+  const doneCount = exs.filter((_,i) => checked[`${r.id}-${i}`]).length;
+  const total = exs.length;
+  const allDone = total > 0 && doneCount === total;
+  const pct = total > 0 ? Math.round(doneCount/total*100) : 0;
+
+  const wh = `
+    <div class="wh">
+      <div class="wh-day">${r.day}</div>
+      <div class="wh-title">${r.label}</div>
+      <div class="muscle-tags">${(r.muscles||[]).map(m=>`<span class="mtag">${m}</span>`).join('')}</div>
+      <div class="prog-row">
+        <span class="prog-lbl">${doneCount}/${total} ejercicios</span>
+        <span class="prog-num ${allDone?'done':''}">${pct}%</span>
+      </div>
+      <div class="pbar"><div class="pfill ${allDone?'done':''}" style="width:${pct}%"></div></div>
+    </div>`;
+
+  const banner = allDone ? `
+    <div class="done-banner">
+      <div class="done-icon">🏆</div>
+      <div class="done-title">¡Entrenamiento completado!</div>
+      <div class="done-sub">Gran trabajo hoy, ${myData.name.split(' ')[0]}.</div>
+    </div>` : '';
+
+  // Generar lista de ejercicios agrupando biseries/triseries
+  const exList = (() => {
+    let html = '';
+    let i = 0;
+    let visualNum = 0;
+    while (i < exs.length) {
+      const ex = exs[i];
+      if (ex.grupoId) {
+        // Encontrar todos los miembros del grupo
+        const gid = ex.grupoId;
+        const members = [];
+        const memberIndices = [];
+        let j = i;
+        while (j < exs.length && exs[j].grupoId === gid) {
+          members.push(exs[j]);
+          memberIndices.push(j);
+          j++;
+        }
+        visualNum++;
+        const groupNum = visualNum;
+        const tagText = members.length === 2 ? '🔗 BISERIE' : members.length === 3 ? '🔗 TRISERIE' : '🔗 SUPERSERIE';
+        // Un grupo se considera "done" si TODOS sus miembros están done
+        const allDone = memberIndices.every(idx => checked[`${r.id}-${idx}`]);
+        const groupKey = `${r.id}-group-${gid}`;
+        const restFinal = members[members.length-1].rest || '';
+        html += `<div class="ss-group ${allDone?'done':''}">
+          <div class="ss-header">
+            <div class="ss-tag">${tagText}</div>
+            <div class="ss-hint">Ejecutá ${members.length === 2 ? 'los dos' : 'los tres'} ejercicios seguidos, después descansá</div>
+          </div>
+          ${members.map((m, idx) => {
+            const realIdx = memberIndices[idx];
+            const k = `${r.id}-${realIdx}`;
+            const w = weights[k] || '';
+            const lastW = weights[`prev-${k}`] || '';
+            return `<div class="ss-item">
+              <div class="ss-item-head">
+                <div class="ss-num">${groupNum}${String.fromCharCode(65+idx)}</div>
+                <div style="flex:1">
+                  <div class="ss-name ${allDone?'done':''}">${m.name}</div>
+                  <div class="ss-det">${m.sets} series × ${m.reps} reps</div>
+                  ${m.note?`<div class="ss-note">↳ ${m.note}</div>`:''}
+                  ${m.video?`<a href="${m.video}" target="_blank" onclick="event.stopPropagation()" style="display:inline-block;margin-top:6px;font-size:11px;font-weight:700;color:#FF4D00;text-decoration:none;padding:4px 12px;border:1px solid #FF4D00;border-radius:20px;letter-spacing:.5px">▶ Ver video</a>`:''}
+                </div>
+                <div class="ss-badge">${m.sets}×${m.reps}</div>
+              </div>
+              <div class="ss-weight-row" onclick="event.stopPropagation()">
+                <div style="font-size:11px;color:#555;font-weight:600;flex-shrink:0">Carga:</div>
+                <input type="number" placeholder="kg" value="${w}" onclick="event.stopPropagation()" onchange="saveWeight('${k}', this.value)"
+                  style="width:70px;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;padding:6px 10px;color:#f0f0f0;font-size:13px;font-weight:700;outline:none;-webkit-appearance:none"/>
+                <div style="font-size:11px;color:#555">kg</div>
+                ${lastW ? `<div style="font-size:11px;color:#555;margin-left:4px">· Anterior: <span style="color:#FF4D00;font-weight:700">${lastW}kg</span></div>` : ''}
+              </div>
+            </div>`;
+          }).join('')}
+          <div class="ss-footer" onclick="toggleGroup('${r.id}','${gid}')">
+            <div class="chk ${allDone?'done':''}">${allDone?'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#080808" stroke-width="3"><polyline points="20,6 9,17 4,12"/></svg>':''}</div>
+            <div class="ss-complete-lbl ${allDone?'done':''}">Serie completada</div>
+            ${restFinal?`<div class="ss-rest">descanso: ${restFinal}</div>`:''}
+          </div>
+        </div>`;
+        i = j;
+      } else {
+        // Ejercicio suelto normal (lógica existente)
+        const k = `${r.id}-${i}`;
+        const d = !!checked[k];
+        const w = weights[k] || '';
+        const lastW = weights[`prev-${k}`] || '';
+        visualNum++;
+        html += `
+      <div class="ec ${d?'done':''}" style="flex-direction:column;align-items:stretch;gap:0">
+        <div style="display:flex;align-items:center;gap:12px" onclick="toggleEx('${k}')">
+          <div class="chk ${d?'done':''}">${d?'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#080808" stroke-width="3"><polyline points="20,6 9,17 4,12"/></svg>':''}</div>
+          <div style="flex:1">
+            <div class="ec-name ${d?'done':''}">${ex.name}</div>
+            <div class="ec-det">${ex.sets} series × ${ex.reps} reps · ${ex.rest}</div>
+            ${ex.note?`<div class="ec-note">↳ ${ex.note}</div>`:''}
+            ${ex.video?`<a href="${ex.video}" target="_blank" onclick="event.stopPropagation()" style="display:inline-block;margin-top:6px;font-size:11px;font-weight:700;color:#FF4D00;text-decoration:none;padding:4px 12px;border:1px solid #FF4D00;border-radius:20px;letter-spacing:.5px">▶ Ver video</a>`:''}
+          </div>
+          <div>
+            <div class="ec-badge ${d?'done':''}">${ex.sets}×${ex.reps}</div>
+            <div class="ec-rest">${ex.rest}</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid #1e1e1e" onclick="event.stopPropagation()">
+          <div style="font-size:11px;color:#555;font-weight:600;flex-shrink:0">Carga usada:</div>
+          <input type="number" placeholder="kg" value="${w}" onclick="event.stopPropagation()" onchange="saveWeight('${k}', this.value)"
+            style="width:70px;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;padding:6px 10px;color:#f0f0f0;font-size:13px;font-weight:700;outline:none;-webkit-appearance:none"/>
+          <div style="font-size:11px;color:#555">kg</div>
+          ${lastW ? `<div style="font-size:11px;color:#555;margin-left:4px">· Anterior: <span style="color:#FF4D00;font-weight:700">${lastW}kg</span></div>` : ''}
+        </div>
+      </div>`;
+        i++;
+      }
+    }
+    return html;
+  })();
+
+  const tabataBlocks = r.tabataBlocks || [];
+  const tabataHtml = tabataBlocks.map((t, ti) => `
+    <div style="background:#111;border-radius:14px;margin-bottom:8px;border:1px solid #FF4D00;overflow:hidden">
+      <div style="padding:14px 16px;background:rgba(255,77,0,0.08)">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:16px;color:#FF4D00;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px">⚡ TABATA</div>
+        <div style="font-size:12px;color:#555">${t.work}'' trabajo / ${t.rest}'' descanso / ${t.rounds} rondas</div>
+        <div style="margin-top:8px;margin-bottom:12px">
+          ${t.exercises.map(ex => `<div style="font-size:13px;color:#f0f0f0;padding:3px 0">• ${ex}</div>`).join('')}
+        </div>
+        <button onclick="startTabata(${ti})" style="width:100%;padding:12px;border-radius:10px;border:none;background:#FF4D00;color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:15px;letter-spacing:2px;text-transform:uppercase;cursor:pointer">▶ Iniciar Tabata</button>
+      </div>
+    </div>`).join('');
+
+  el.innerHTML = heroHtml + streakHtml + msgHtml + dayStrip + wh + banner +
+    `<div class="slbl2">Ejercicios</div>` + exList + tabataHtml;
+}
+
+function loadChecks(uid) {
+  const key = todayKey();
+  db.collection('students').doc(uid).collection('checks').doc(key).onSnapshot(snap => {
+    if (snap.exists) { checked = snap.data().exercises || {}; }
+    else { checked = {}; }
+    renderHoy();
+  });
+}
+
+function loadWeights(uid) {
+  const key = todayKey();
+  db.collection('students').doc(uid).collection('weights').doc(key).onSnapshot(snap => {
+    if (snap.exists) {
+      const todayW = snap.data().exercises || {};
+      Object.keys(todayW).forEach(k => weights[k] = todayW[k]);
+    }
+    renderHoy();
+  });
+  db.collection('students').doc(uid).collection('weights')
+    .orderBy('date', 'desc').limit(2).get().then(snap => {
+      snap.docs.forEach((d, idx) => {
+        if (idx > 0) {
+          const prevW = d.data().exercises || {};
+          Object.keys(prevW).forEach(k => weights[`prev-${k}`] = prevW[k]);
+        }
+      });
+      renderHoy();
+    }).catch(() => {});
+}
+
+async function saveWeight(k, val) {
+  if (!myUid || !val) return;
+  const key = todayKey();
+  weights[k] = val;
+  try {
+    await db.collection('students').doc(myUid).collection('weights').doc(key).set({
+      exercises: weights, date: key
+    }, { merge: true });
+  } catch(e) {}
+}
+
+function selectRoutine(id) { selectedRoutineId = id; renderHoy(); }
+
+async function toggleEx(k) {
+  checked[k] = !checked[k];
+  renderHoy();
+  if (myUid) {
+    const key = todayKey();
+    await db.collection('students').doc(myUid).collection('checks').doc(key).set({
+      exercises: checked, date: key
+    });
+  }
+}
+
+async function toggleGroup(routineId, grupoId) {
+  const r = myRoutines.find(x => x.id === routineId);
+  if (!r) return;
+  const exs = r.exercises || [];
+  // Encontrar los índices de los ejercicios de este grupo
+  const indices = [];
+  exs.forEach((ex, i) => { if (ex.grupoId === grupoId) indices.push(i); });
+  if (!indices.length) return;
+  // Si todos están done, desmarcar todos. Si no, marcar todos.
+  const allDone = indices.every(idx => checked[`${routineId}-${idx}`]);
+  const newVal = !allDone;
+  indices.forEach(idx => { checked[`${routineId}-${idx}`] = newVal; });
+  renderHoy();
+  if (myUid) {
+    const key = todayKey();
+    await db.collection('students').doc(myUid).collection('checks').doc(key).set({
+      exercises: checked, date: key
+    });
+  }
+}
+
+function startTabata(blockIndex) {
+  const r = myRoutines.find(x => x.id === selectedRoutineId) || myRoutines[0];
+  if (!r) return;
+  const t = (r.tabataBlocks || [])[blockIndex];
+  if (!t) return;
+  let currentRound = 1;
+  let currentExIdx = 0;
+  let isWork = true;
+  let seconds = t.work;
+  if (timerInterval) clearInterval(timerInterval);
+  function updateDisplay() {
+    document.getElementById('timer-num').textContent = seconds;
+    document.getElementById('timer-label').textContent = isWork ? '🔥 TRABAJO' : '😮‍💨 DESCANSO';
+    document.getElementById('timer-ex-name').textContent = t.exercises[currentExIdx] || '';
+    document.getElementById('timer-next-ex').textContent = `Ronda ${currentRound} de ${t.rounds}`;
+    document.getElementById('timer-circle').style.borderColor = isWork ? '#FF4D00' : '#00E676';
+  }
+  updateDisplay();
+  document.getElementById('timer-overlay').classList.add('show');
+  timerInterval = setInterval(() => {
+    seconds--;
+    document.getElementById('timer-num').textContent = seconds;
+    if (seconds <= 0) {
+      if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+      if (isWork) { isWork = false; seconds = t.rest; }
+      else {
+        currentExIdx++;
+        if (currentExIdx >= t.exercises.length) { currentExIdx = 0; currentRound++; }
+        if (currentRound > t.rounds) {
+          clearInterval(timerInterval);
+          document.getElementById('timer-overlay').classList.remove('show');
+          if (navigator.vibrate) navigator.vibrate([300, 100, 300, 100, 300]);
+          return;
+        }
+        isWork = true; seconds = t.work;
+      }
+      updateDisplay();
+    }
+  }, 1000);
+}
+
+function renderMusculos() {
+  const r = myRoutines.find(x => x.id === selectedRoutineId) || myRoutines[0];
+  const activeM = r ? (r.muscles||[]) : [];
+  document.querySelectorAll('.muscle-zone').forEach(zone => {
+    const muscle = zone.getAttribute('data-muscle');
+    const isActive = activeM.includes(muscle);
+    zone.style.fill = isActive ? '#FF4D00' : '#1a1a1a';
+    zone.style.opacity = isActive ? '1' : '0.6';
+    zone.style.filter = isActive ? 'drop-shadow(0 0 4px rgba(255,77,0,0.6))' : 'none';
+  });
+}
+
+function renderWeekList() {
+  document.getElementById('week-list').innerHTML = myRoutines.length === 0
+    ? '<div class="empty"><div class="empty-icon">📋</div><div style="font-size:14px">Sin rutinas asignadas</div></div>'
+    : myRoutines.map(r => `
+      <div class="wcard">
+        <div class="wd">${r.day}</div>
+        <div class="wt">${r.label}</div>
+        <div class="muscle-tags">${(r.muscles||[]).map(m=>`<span class="mtag">${m}</span>`).join('')}</div>
+        <div class="wcount">${(r.exercises||[]).length} ejercicios</div>
+      </div>`).join('');
+}
+
+function buildCalendar(attendanceDays) {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = today.getMonth();
+  const monthNames = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const dayNames = ['D','L','M','M','J','V','S'];
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const todayDate = today.getDate();
+
+  let cal = `
+    <div style="background:#111;border-radius:14px;padding:16px;margin-bottom:14px;border:1px solid #1e1e1e">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:10px;letter-spacing:2px;color:#555;text-transform:uppercase;margin-bottom:12px">📅 ${monthNames[month]} ${year}</div>
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center;margin-bottom:8px">
+        ${dayNames.map(d => `<div style="font-size:10px;color:#555;font-weight:600;padding:2px">${d}</div>`).join('')}
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center">`;
+
+  for (let i = 0; i < firstDay; i++) cal += `<div></div>`;
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateKey = `${year}-${month+1}-${d}`;
+    const trained = attendanceDays.includes(dateKey);
+    const isToday = d === todayDate;
+    let bg = 'transparent', color = '#555', border = 'none', fontWeight = '400';
+    if (trained) { bg = '#FF4D00'; color = '#fff'; fontWeight = '700'; }
+    if (isToday && !trained) { border = '1px solid #FF4D00'; color = '#FF4D00'; fontWeight = '700'; }
+    cal += `<div style="padding:5px 2px;border-radius:6px;background:${bg};color:${color};font-size:12px;font-weight:${fontWeight};border:${border}">${d}</div>`;
+  }
+  cal += `</div></div>`;
+  return cal;
+}
+
+function renderProgreso() {
+  if (!myData) return;
+  const history = myData.history || [];
+  const att = myData.attendance || 0;
+  const total = myData.totalSessions || 0;
+  const pct = total > 0 ? Math.round(att/total*100) : 0;
+  const attendanceDays = myData.attendanceDays || [];
+  const calHtml = buildCalendar(attendanceDays);
+
+  let payHtml = '';
+  if (myData.paymentDue) {
+    const today = new Date(); today.setHours(0,0,0,0);
+    const due = new Date(myData.paymentDue); due.setHours(0,0,0,0);
+    const diff = Math.round((due - today) / (1000*60*60*24));
+    const formattedDue = `${due.getDate()}/${due.getMonth()+1}/${due.getFullYear()}`;
+    let payColor = '#00E676', payMsg = `Al día — vence el ${formattedDue}`;
+    if (diff < 0) { payColor = '#FF1744'; payMsg = `Vencido hace ${Math.abs(diff)} días — contactá a tu entrenador`; }
+    else if (diff === 0) { payColor = '#FF4D00'; payMsg = `Vence HOY — contactá a tu entrenador`; }
+    else if (diff <= 3) { payColor = '#FFD600'; payMsg = `Vence en ${diff} día${diff===1?'':'s'} — el ${formattedDue}`; }
+    payHtml = `
+      <div style="background:#111;border-radius:14px;padding:16px;margin-bottom:14px;border:1px solid #1e1e1e">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:10px;letter-spacing:2px;color:#555;text-transform:uppercase;margin-bottom:8px">💳 Estado de pago</div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="font-size:28px">${diff < 0 ? '🔴' : diff <= 3 ? '🟡' : '🟢'}</div>
+          <div style="font-size:13px;color:${payColor};font-weight:600">${payMsg}</div>
+        </div>
+      </div>`;
+  }
+
+  let chartHtml = '';
+  if (history.length >= 2) {
+    const ws = history.map(h => h.weight);
+    const mn = Math.min(...ws) - .5, mx = Math.max(...ws) + .5;
+    const norm = w => Math.max(6, ((w-mn)/(mx-mn))*100);
+    const rev = [...history].reverse();
+    chartHtml = `<div class="chart-box">
+      <div class="chart-lbl">Evolución de peso — kg</div>
+      <div class="chart-bars">
+        ${rev.map((h,i) => `<div class="cbw"><div class="cb ${i===rev.length-1?'last':''}" style="height:${norm(h.weight)}%"></div><div class="cbl">${h.date.split(' ')[0]}</div></div>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  document.getElementById('progreso-content').innerHTML = `
+    <div class="slbl2">Mi Progreso</div>
+    ${payHtml}
+    ${calHtml}
+    <div class="sgrid">
+      <div class="scell"><div class="snum">${att}</div><div class="slbl">Asistencias</div></div>
+      <div class="scell"><div class="snum">${pct}%</div><div class="slbl">% Asistencia</div></div>
+    </div>
+    <div style="background:#111;border-radius:14px;padding:0 14px;margin-bottom:14px;border:1px solid #1e1e1e">
+      <div style="padding:12px 0 8px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:12px;color:#555;font-weight:600">Asistencia del mes</span>
+        <span style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:15px;color:#FF4D00">${att}/${total}</span>
+      </div>
+      <div class="pbar" style="margin-bottom:14px"><div class="pfill" style="width:${pct}%"></div></div>
+    </div>
+    ${chartHtml}
+    <div class="slbl2">Historial de peso</div>
+    ${history.length === 0
+      ? '<div style="text-align:center;padding:20px;color:#555;font-size:13px">Sin registros aún</div>'
+      : `<div style="background:#111;border-radius:14px;padding:0 14px;border:1px solid #1e1e1e">
+          ${history.map(h => `<div class="hist-row"><div><div class="hdate">${h.date}</div>${h.note?`<div class="hnote">${h.note}</div>`:''}</div><div class="hw">${h.weight} <span style="font-size:12px;color:#555">kg</span></div></div>`).join('')}
+        </div>`}
+  `;
+}
+
+function checkPaymentAlert(data) {
+  if (!data.paymentDue) return;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const due = new Date(data.paymentDue); due.setHours(0,0,0,0);
+  const diff = Math.round((due - today) / (1000*60*60*24));
+  if (diff <= 3) {
+    const msg = diff < 0 ? `Tu cuota está vencida hace ${Math.abs(diff)} días. Contactá a tu entrenador.`
+      : diff === 0 ? `Tu cuota vence HOY. Contactá a tu entrenador.`
+      : `Tu cuota vence en ${diff} días. ¡No te olvides!`;
+    setTimeout(() => {
+      document.getElementById('ach-emoji').textContent = '💳';
+      document.getElementById('ach-title').textContent = 'Aviso de pago';
+      document.getElementById('ach-msg').textContent = msg;
+      document.getElementById('achievement-overlay').classList.add('show');
+      showingAchievement = true;
+    }, 2000);
+  }
+}
+
+const ACHIEVEMENTS = [
+  { id: 'streak_3', emoji: '⚡', title: '¡3 días seguidos!', msg: () => '3 entrenamientos seguidos. ¡Estás en racha!', check: (d) => (d.streak||0) >= 3 },
+  { id: 'streak_7', emoji: '🔥', title: '¡Semana perfecta!', msg: () => '7 días seguidos entrenando. ¡Eso es dedicación de élite!', check: (d) => (d.streak||0) >= 7 },
+  { id: 'streak_14', emoji: '🚀', title: '¡2 semanas seguidas!', msg: () => '14 días sin parar. ¡Sos una máquina!', check: (d) => (d.streak||0) >= 14 },
+  { id: 'first_login', emoji: '👋', title: '¡Bienvenido!', msg: name => `Hola ${name}! Tu entrenamiento personalizado está listo. ¡Vamos a lograr tus objetivos juntos!`, check: (d) => true },
+  { id: 'att_10', emoji: '🔥', title: '¡10 Asistencias!', msg: () => '10 sesiones completadas. La constancia es la clave del éxito. ¡Seguí así!', check: (d) => (d.attendance||0) >= 10 },
+  { id: 'att_25', emoji: '💪', title: '¡25 Asistencias!', msg: () => '25 sesiones. Ya sos parte del grupo que lo hace en serio. ¡Orgullo!', check: (d) => (d.attendance||0) >= 25 },
+  { id: 'att_50', emoji: '🏅', title: '¡50 Asistencias!', msg: () => '50 sesiones completadas. Eso es dedicación real. ¡Sos un ejemplo!', check: (d) => (d.attendance||0) >= 50 },
+  { id: 'att_100', emoji: '🏆', title: '¡100 Asistencias!', msg: () => '100 sesiones. Sos una máquina. Muy pocos llegan acá. ¡Respeto total!', check: (d) => (d.attendance||0) >= 100 },
+  { id: 'weight_3kg', emoji: '⬇️', title: '¡-3 kg!', msg: () => 'Bajaste 3kg desde que arrancaste. ¡El trabajo se ve!', check: (d) => { const h = d.history||[]; return h.length >= 2 && (h[h.length-1].weight - h[0].weight) <= -3; }},
+  { id: 'weight_5kg', emoji: '🎯', title: '¡-5 kg!', msg: () => '5kg menos desde el inicio. ¡Esto es un cambio real en tu vida!', check: (d) => { const h = d.history||[]; return h.length >= 2 && (h[h.length-1].weight - h[0].weight) <= -5; }},
+  { id: 'weight_10kg', emoji: '🌟', title: '¡-10 kg!', msg: () => '10kg de diferencia. ¡Impresionante! Sos otra persona. ¡Felicitaciones!', check: (d) => { const h = d.history||[]; return h.length >= 2 && (h[h.length-1].weight - h[0].weight) <= -10; }},
+  { id: 'month_1', emoji: '📅', title: '¡1 Mes!', msg: () => 'Un mes entrenando con Garde Method. Ya es un hábito. ¡Eso vale oro!', check: (d) => { if (!d.createdAt) return false; return (Date.now() - new Date(d.createdAt).getTime()) / (1000*60*60*24) >= 30; }},
+  { id: 'month_3', emoji: '🚀', title: '¡3 Meses!', msg: () => '3 meses de constancia. Los cambios físicos y mentales ya son evidentes. ¡Seguí!', check: (d) => { if (!d.createdAt) return false; return (Date.now() - new Date(d.createdAt).getTime()) / (1000*60*60*24) >= 90; }},
+];
+
+let achievementsQueue = [];
+let showingAchievement = false;
+
+async function checkAchievements(data) {
+  if (!myUid || !data) return;
+  try {
+    const snap = await db.collection('students').doc(myUid).collection('achievements').doc('unlocked').get();
+    const unlocked = snap.exists ? (snap.data().ids || []) : [];
+    const newUnlocked = [];
+    for (const ach of ACHIEVEMENTS) {
+      if (!unlocked.includes(ach.id) && ach.check(data)) {
+        newUnlocked.push(ach.id);
+        achievementsQueue.push(ach);
+      }
+    }
+    if (newUnlocked.length) {
+      await db.collection('students').doc(myUid).collection('achievements').doc('unlocked').set({ ids: [...unlocked, ...newUnlocked] });
+      showNextAchievement(data.name || '');
+    }
+  } catch(e) {}
+}
+
+function showNextAchievement(name) {
+  if (showingAchievement || achievementsQueue.length === 0) return;
+  const ach = achievementsQueue.shift();
+  showingAchievement = true;
+  document.getElementById('ach-emoji').textContent = ach.emoji;
+  document.getElementById('ach-title').textContent = ach.title;
+  document.getElementById('ach-msg').textContent = ach.msg(name);
+  document.getElementById('achievement-overlay').classList.add('show');
+}
+
+function closeAchievement() {
+  document.getElementById('achievement-overlay').classList.remove('show');
+  showingAchievement = false;
+  const name = myData ? myData.name.split(' ')[0] : '';
+  if (achievementsQueue.length > 0) setTimeout(() => showNextAchievement(name), 600);
+}
+
+const achBtn = document.getElementById('ach-btn');
+const achOverlay = document.getElementById('achievement-overlay');
+function handleAchClose(e) { e.preventDefault(); e.stopPropagation(); closeAchievement(); }
+achBtn.addEventListener('touchend', handleAchClose, { passive: false });
+achBtn.addEventListener('click', handleAchClose);
+achOverlay.addEventListener('touchend', (e) => { if (e.target === achOverlay) { e.preventDefault(); closeAchievement(); }}, { passive: false });
+achOverlay.addEventListener('click', (e) => { if (e.target === achOverlay) closeAchievement(); });
+
+async function checkWeeklyReport(data) {
+  if (!myUid) return;
+  const today = new Date();
+  if (today.getDay() !== 0) return;
+  const weekKey = `week-${today.getFullYear()}-${Math.floor((today - new Date(today.getFullYear(), 0, 1)) / (7*24*60*60*1000))}`;
+  try {
+    const snap = await db.collection('students').doc(myUid).collection('achievements').doc('weekly').get();
+    if (snap.exists && snap.data().lastWeek === weekKey) return;
+    const att = data.attendance || 0;
+    const streak = data.streak || 0;
+    const maxStreak = data.maxStreak || 0;
+    const name = data.name.split(' ')[0];
+    let emoji = '📊', title = '¡Resumen semanal!', msg = '';
+    if (streak >= 7) { emoji = '🔥'; title = '¡Semana perfecta!'; msg = `${name}, entrenaste todos los días esta semana. Solo el 3% de las personas mantiene esta constancia. ¡Sos élite!`; }
+    else if (streak >= 5) { emoji = '⚡'; title = '¡Gran semana!'; msg = `${name}, entrenaste ${streak} días esta semana. Estás en el top 10% de constancia. ¡Seguí así!`; }
+    else if (streak >= 3) { emoji = '💪'; title = '¡Buena semana!'; msg = `${name}, llevas ${streak} días seguidos entrenando. La mayoría de las personas no llega ni a 2. ¡Bien hecho!`; }
+    else if (att >= 50) { emoji = '🏅'; title = '¡50 entrenamientos!'; msg = `${name}, acumulaste ${att} entrenamientos en total. Eso equivale a más de ${Math.round(att*1.2)} horas de trabajo duro. ¡Respeto!`; }
+    else { emoji = '📅'; title = 'Nuevo comienzo'; msg = `${name}, cada semana es una nueva oportunidad. Esta semana podés empezar tu mejor racha. ¡Vos podés!`; }
+    await db.collection('students').doc(myUid).collection('achievements').doc('weekly').set({ lastWeek: weekKey });
+    setTimeout(() => { achievementsQueue.push({ emoji, title, msg: () => msg }); if (!showingAchievement) showNextAchievement(name); }, 3000);
+  } catch(e) {}
+}
+
+let timerInterval = null;
+let timerSeconds = 0;
+
+function startTimer(seconds, exName, nextExName) {
+  if (timerInterval) clearInterval(timerInterval);
+  timerSeconds = seconds;
+  document.getElementById('timer-num').textContent = timerSeconds;
+  document.getElementById('timer-ex-name').textContent = exName || '';
+  document.getElementById('timer-next-ex').textContent = nextExName ? `Próximo: ${nextExName}` : '';
+  document.getElementById('timer-circle').style.borderColor = '#FF4D00';
+  document.getElementById('timer-label').textContent = 'Descanso';
+  document.getElementById('timer-overlay').classList.add('show');
+  timerInterval = setInterval(() => {
+    timerSeconds--;
+    document.getElementById('timer-num').textContent = timerSeconds;
+    if (timerSeconds <= 5) document.getElementById('timer-circle').style.borderColor = '#00E676';
+    if (timerSeconds <= 0) {
+      clearInterval(timerInterval);
+      document.getElementById('timer-overlay').classList.remove('show');
+      if (navigator.vibrate) navigator.vibrate([300, 100, 300]);
+    }
+  }, 1000);
+}
+
+function stopTimer() { if (timerInterval) clearInterval(timerInterval); document.getElementById('timer-overlay').classList.remove('show'); }
+document.getElementById('timer-skip-btn').addEventListener('click', stopTimer);
+document.getElementById('timer-skip-btn').addEventListener('touchend', (e) => { e.preventDefault(); stopTimer(); });
+
+function openTimerPicker() { document.getElementById('timer-picker').classList.add('show'); }
+function closeTimerPicker() { document.getElementById('timer-picker').classList.remove('show'); }
+function startTimerManual(seconds) { closeTimerPicker(); startTimer(seconds, '', ''); }
+
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  ['hoy','musculos','progreso'].forEach(t => {
+    const el = document.getElementById('tab-'+t);
+    if (el) el.style.display = t === tab ? 'block' : 'none';
+  });
+  document.querySelectorAll('.nb').forEach((b,i) => {
+    b.classList.toggle('on', ['hoy','musculos','progreso'][i] === tab);
+  });
+  document.getElementById('float-timer-btn').style.display = tab === 'hoy' ? 'block' : 'none';
+  if (tab === 'musculos') { renderMusculos(); renderWeekList(); }
+  if (tab === 'progreso') renderProgreso();
+}
+</script>
+</body>
+</html>
