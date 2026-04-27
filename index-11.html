@@ -1,0 +1,2017 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Garde Method — Mi Entrenamiento</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#080808;color:#f0f0f0;font-family:'Barlow',sans-serif;-webkit-font-smoothing:antialiased}
+.page{display:none;max-width:430px;margin:0 auto;min-height:100vh;flex-direction:column}
+.page.active{display:flex}
+.login-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px}
+.login-logo{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:34px;letter-spacing:5px;text-transform:uppercase;margin-bottom:6px}
+.login-logo span{color:#FF4D00}
+.login-sub{font-size:12px;color:#555;margin-bottom:40px;letter-spacing:2px;text-transform:uppercase}
+.login-card{width:100%;background:#111;border-radius:16px;padding:28px 20px;border:1px solid #1e1e1e}
+.login-title{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:22px;text-transform:uppercase;letter-spacing:2px;margin-bottom:20px}
+.flbl{font-size:10px;color:#555;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:5px;display:block}
+.inp{width:100%;background:#1a1a1a;border:1px solid #1e1e1e;border-radius:10px;padding:13px 14px;color:#f0f0f0;font-family:'Barlow',sans-serif;font-size:14px;outline:none;margin-bottom:12px;-webkit-appearance:none}
+.inp:focus{border-color:#FF4D00}
+.err{font-size:12px;color:#FF4D00;margin-bottom:10px;text-align:center;min-height:18px}
+.btn-fire{width:100%;padding:15px;border-radius:12px;border:none;background:#FF4D00;color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:16px;letter-spacing:2px;text-transform:uppercase;cursor:pointer}
+.hdr{padding:16px 20px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #1e1e1e;background:linear-gradient(180deg,rgba(255,77,0,.06) 0%,transparent 100%)}
+.logo{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:20px;letter-spacing:4px;text-transform:uppercase}
+.logo span{color:#FF4D00}
+.role-tag{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:10px;letter-spacing:2px;padding:5px 12px;background:#00E676;color:#080808;text-transform:uppercase;border-radius:2px;cursor:pointer;border:none}
+.scroll{flex:1;overflow-y:auto;padding:18px 20px 90px}
+.nav{display:flex;background:#111;border-top:1px solid #1e1e1e;padding:8px 0 6px;position:sticky;bottom:0}
+.nb{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;border:none;background:transparent;color:#444;cursor:pointer;padding:6px;font-family:'Barlow',sans-serif}
+.nb.on{color:#FF4D00}
+.nb svg{width:20px;height:20px}
+.nb span{font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase}
+.hero{background:#111;border-radius:14px;padding:18px;margin-bottom:16px;border:1px solid #1e1e1e;display:flex;align-items:center;gap:14px}
+.hero-av{width:56px;height:56px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:18px;color:#fff;flex-shrink:0}
+.hero-name{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:22px;text-transform:uppercase;line-height:1}
+.hero-sub{font-size:12px;color:#555;margin-top:3px}
+.day-strip{display:flex;gap:8px;overflow-x:auto;margin-bottom:16px;padding-bottom:2px;scrollbar-width:none}
+.day-strip::-webkit-scrollbar{display:none}
+.day-btn{flex-shrink:0;padding:9px 16px;border-radius:8px;border:1px solid #1e1e1e;background:#111;color:#555;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.day-btn.active{background:#FF4D00;border-color:#FF4D00;color:#fff}
+.wh{background:#111;border-radius:14px;padding:16px;margin-bottom:12px;border:1px solid #1e1e1e;border-left:3px solid #FF4D00}
+.wh-day{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:9px;letter-spacing:2px;color:#FF4D00;text-transform:uppercase;margin-bottom:3px}
+.wh-title{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:22px;text-transform:uppercase;margin-bottom:8px}
+.muscle-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px}
+.mtag{font-size:11px;font-weight:600;padding:3px 9px;border-radius:3px;background:#1a1a1a;color:#555;border:1px solid #1e1e1e}
+.prog-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.prog-lbl{font-size:12px;color:#555}
+.prog-num{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:15px;color:#FF4D00}
+.prog-num.done{color:#00E676}
+.pbar{height:3px;background:#1e1e1e;border-radius:2px;overflow:hidden}
+.pfill{height:100%;background:#FF4D00;border-radius:2px;transition:width .4s}
+.pfill.done{background:#00E676}
+.ec{background:#111;border-radius:12px;padding:14px;margin-bottom:8px;border:1px solid #1e1e1e;cursor:pointer;display:flex;align-items:center;gap:12px;-webkit-tap-highlight-color:transparent;transition:opacity .2s}
+.ec.done{opacity:.5}
+.ss-group{background:#111;border-radius:12px;margin-bottom:8px;border:1px solid #1e1e1e;border-left:4px solid #FF4D00;overflow:hidden;transition:opacity .2s}
+.ss-group.done{opacity:.5}
+.ss-header{padding:10px 14px 8px;background:rgba(255,77,0,0.06);border-bottom:1px solid #1e1e1e}
+.ss-tag{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:11px;letter-spacing:2px;color:#FF4D00;text-transform:uppercase}
+.ss-hint{font-size:10px;color:#666;margin-top:2px}
+.ss-item{padding:12px 14px;border-bottom:1px dashed #1e1e1e}
+.ss-item:last-of-type{border-bottom:none}
+.ss-item-head{display:flex;align-items:flex-start;gap:10px}
+.ss-num{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:15px;color:#FF4D00;min-width:24px;flex-shrink:0;margin-top:2px}
+.ss-name{font-size:14px;font-weight:500}
+.ss-name.done{text-decoration:line-through;color:#555}
+.ss-det{font-size:11px;color:#666;margin-top:2px}
+.ss-note{font-size:11px;color:#888;font-style:italic;margin-top:3px}
+.ss-badge{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:17px;color:#FF4D00;flex-shrink:0}
+.ss-weight-row{display:flex;align-items:center;gap:8px;margin-top:8px;padding-top:8px;border-top:1px solid #1a1a1a}
+.ss-footer{padding:12px 14px;background:#0a0a0a;display:flex;align-items:center;gap:12px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.ss-rest{font-size:11px;color:#666;margin-left:auto;flex-shrink:0}
+.ss-complete-lbl{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:13px;letter-spacing:1px;text-transform:uppercase;color:#f0f0f0}
+.ss-complete-lbl.done{color:#555;text-decoration:line-through}
+.chk{width:26px;height:26px;border-radius:8px;border:2px solid #2a2a2a;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s}
+.chk.done{background:#00E676;border-color:#00E676}
+.ec-name{font-size:14px;font-weight:500;transition:all .2s}
+.ec-name.done{text-decoration:line-through;color:#555}
+.ec-det{font-size:11px;color:#555;margin-top:2px}
+.ec-note{font-size:11px;color:#FF9800;margin-top:2px}
+.ec-badge{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:19px;color:#FF4D00;flex-shrink:0;text-align:right;transition:color .2s}
+.ec-badge.done{color:#00E676}
+.ec-rest{font-size:10px;color:#555;text-align:right;margin-top:1px}
+.done-banner{background:rgba(0,230,118,.1);border:1px solid rgba(0,230,118,.25);border-radius:12px;padding:16px;text-align:center;margin-bottom:14px}
+.done-icon{font-size:30px;margin-bottom:5px}
+.done-title{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:18px;letter-spacing:1px;color:#00E676;text-transform:uppercase}
+.done-sub{font-size:12px;color:#555;margin-top:3px}
+.mg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.mc{background:#111;border-radius:12px;padding:14px 8px;text-align:center;border:1px solid #1e1e1e;transition:all .2s}
+.mc.active{border-color:#FF4D00;background:rgba(255,77,0,.08)}
+.mc-ico{font-size:22px;margin-bottom:5px}
+.mc-lbl{font-size:10px;color:#555;font-weight:600;letter-spacing:.5px}
+.mc.active .mc-lbl{color:#ccc}
+.wcard{background:#111;border-radius:12px;padding:14px;margin-bottom:8px;border:1px solid #1e1e1e}
+.wd{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:9px;letter-spacing:2px;color:#FF4D00;text-transform:uppercase;margin-bottom:3px}
+.wt{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:16px;text-transform:uppercase;margin-bottom:7px}
+.wcount{font-size:11px;color:#555;margin-top:5px}
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:2px;border-radius:14px;overflow:hidden;margin-bottom:14px}
+.scell{background:#111;padding:18px}
+.snum{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:38px;line-height:1}
+.slbl{font-size:11px;color:#555;margin-top:3px}
+.chart-box{background:#1a1a1a;border-radius:12px;padding:14px;margin-bottom:14px}
+.chart-lbl{font-size:10px;color:#555;letter-spacing:1px;text-transform:uppercase;font-weight:600;margin-bottom:12px}
+.chart-bars{display:flex;align-items:flex-end;gap:5px;height:60px}
+.cbw{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.cb{width:100%;background:#2a2a2a;border-radius:2px 2px 0 0;min-height:3px}
+.cb.last{background:#FF4D00}
+.cbl{font-size:9px;color:#555}
+.hist-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #1e1e1e}
+.hist-row:last-child{border-bottom:none}
+.hdate{font-size:12px;color:#555}
+.hnote{font-size:10px;color:#333;margin-top:1px}
+.hw{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:20px}
+.slbl2{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#555;margin-bottom:12px}
+.divider{height:1px;background:#1e1e1e;margin:16px 0}
+.empty{text-align:center;padding:40px 20px;color:#444}
+.empty-icon{font-size:40px;margin-bottom:12px;opacity:.6}
+.loading{text-align:center;padding:60px 20px;color:#555;font-size:14px}
+.timer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:500;flex-direction:column;align-items:center;justify-content:center;padding:30px;transition:background .3s}
+.timer-overlay.show{display:flex}
+.timer-overlay.work{background:rgba(0,40,10,.97)}
+.timer-overlay.rest{background:rgba(50,0,0,.97)}
+.timer-label{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;letter-spacing:3px;text-transform:uppercase;color:#555;margin-bottom:16px}
+.timer-circle{width:200px;height:200px;border-radius:50%;border:4px solid #1e1e1e;display:flex;align-items:center;justify-content:center;position:relative;margin-bottom:24px;transition:all .3s}
+.timer-circle.work{border-color:#00E676;background:rgba(0,230,118,0.15);box-shadow:0 0 40px rgba(0,230,118,0.4)}
+.timer-circle.rest{border-color:#FF1744;background:rgba(255,23,68,0.15);box-shadow:0 0 40px rgba(255,23,68,0.4)}
+.timer-circle.warn{animation:pulseWarn .5s ease-in-out infinite}
+@keyframes pulseWarn{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+.timer-num{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:72px;color:#f0f0f0;line-height:1}
+.timer-sec{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:20px;color:#555}
+.timer-ex{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:18px;text-transform:uppercase;color:#f0f0f0;margin-bottom:8px;text-align:center}
+.timer-next{font-size:12px;color:#555;margin-bottom:32px;text-align:center}
+.timer-skip{background:#1a1a1a;border:1px solid #1e1e1e;color:#555;border-radius:12px;padding:14px 32px;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:14px;letter-spacing:2px;text-transform:uppercase;cursor:pointer}
+.achievement-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:600;align-items:center;justify-content:center;flex-direction:column;padding:30px}
+.achievement-overlay.show{display:flex}
+.achievement-box{background:#111;border-radius:24px;padding:32px 24px;text-align:center;border:1px solid #1e1e1e;max-width:340px;width:100%;position:relative}
+.achievement-glow{position:absolute;inset:0;border-radius:24px;border:2px solid #FF4D00;opacity:.6;animation:glow 2s ease-in-out infinite}
+@keyframes glow{0%,100%{opacity:.3}50%{opacity:.8}}
+.achievement-emoji{font-size:60px;margin-bottom:12px;display:block}
+.achievement-title{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:28px;text-transform:uppercase;letter-spacing:2px;color:#FF4D00;margin-bottom:8px}
+.achievement-msg{font-size:14px;color:#aaa;line-height:1.5;margin-bottom:24px}
+.achievement-btn{background:#FF4D00;border:none;color:#fff;border-radius:12px;padding:14px 32px;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:16px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;width:100%}
+/* ===== NUTRICIÓN ===== */
+.tip-card{background:linear-gradient(135deg,rgba(255,77,0,.12),rgba(255,77,0,.03));border:1px solid rgba(255,77,0,.25);border-left:3px solid #FF4D00;border-radius:14px;padding:16px;margin-bottom:18px}
+.tip-hdr{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.tip-ico{font-size:18px}
+.tip-title{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:11px;letter-spacing:2px;color:#FF4D00;text-transform:uppercase}
+.tip-body{font-size:13px;color:#f0f0f0;line-height:1.5}
+.filter-row{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:8px;scrollbar-width:none}
+.filter-row::-webkit-scrollbar{display:none}
+.filter-label{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:9px;letter-spacing:2px;color:#555;text-transform:uppercase;margin-bottom:6px}
+.fchip{flex-shrink:0;padding:7px 13px;border-radius:20px;border:1px solid #1e1e1e;background:#111;color:#888;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;-webkit-tap-highlight-color:transparent;white-space:nowrap;transition:all .15s}
+.fchip.on{background:#FF4D00;border-color:#FF4D00;color:#fff}
+.rec-card{background:#111;border-radius:14px;padding:14px;margin-bottom:10px;border:1px solid #1e1e1e;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .12s}
+.rec-card:active{transform:scale(.98)}
+.rec-title{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:17px;text-transform:uppercase;line-height:1.1;margin-bottom:6px}
+.rec-badges{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
+.rec-badge{font-size:9px;font-weight:700;padding:3px 7px;border-radius:3px;background:#1a1a1a;color:#888;border:1px solid #1e1e1e;letter-spacing:.5px;text-transform:uppercase}
+.rec-badge.obj{background:rgba(255,77,0,.1);color:#FF4D00;border-color:rgba(255,77,0,.25)}
+.rec-meta{display:flex;gap:12px;font-size:11px;color:#555}
+.rec-meta span{display:flex;align-items:center;gap:3px}
+.nutri-disclaimer{font-size:10px;color:#444;text-align:center;padding:16px 8px 4px;line-height:1.5}
+/* Modal receta pantalla completa */
+.rec-modal{display:none;position:fixed;inset:0;background:#080808;z-index:550;flex-direction:column}
+.rec-modal.show{display:flex}
+.rec-modal-hdr{padding:14px 18px;display:flex;align-items:center;gap:14px;border-bottom:1px solid #1e1e1e;background:#0c0c0c;flex-shrink:0}
+.rec-modal-back{background:transparent;border:none;color:#f0f0f0;font-size:22px;cursor:pointer;padding:4px 8px}
+.rec-modal-ttl{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:15px;text-transform:uppercase;letter-spacing:1px;line-height:1.1;flex:1}
+.rec-modal-body{flex:1;overflow-y:auto;padding:20px 20px 40px;max-width:430px;width:100%;margin:0 auto}
+.rec-modal-title{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:26px;text-transform:uppercase;line-height:1;margin-bottom:10px}
+.rec-modal-badges{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px}
+.rec-modal-meta{display:flex;gap:18px;padding:14px;background:#111;border-radius:12px;border:1px solid #1e1e1e;margin-bottom:20px}
+.rec-modal-meta-item{flex:1;text-align:center}
+.rec-modal-meta-val{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:22px;color:#FF4D00;line-height:1}
+.rec-modal-meta-lbl{font-size:9px;color:#555;margin-top:3px;text-transform:uppercase;letter-spacing:1px}
+.rec-section-ttl{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;letter-spacing:3px;color:#555;text-transform:uppercase;margin:18px 0 10px}
+.rec-ing-list{background:#111;border-radius:12px;padding:4px 14px;border:1px solid #1e1e1e}
+.rec-ing{padding:10px 0;border-bottom:1px dashed #1e1e1e;font-size:13px;color:#f0f0f0;display:flex;gap:10px;align-items:flex-start}
+.rec-ing:last-child{border-bottom:none}
+.rec-ing-dot{color:#FF4D00;flex-shrink:0;margin-top:2px}
+.rec-prep-list{counter-reset:step}
+.rec-prep{background:#111;border-radius:12px;padding:14px;border:1px solid #1e1e1e;margin-bottom:8px;display:flex;gap:12px;counter-increment:step;position:relative}
+.rec-prep::before{content:counter(step);font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:22px;color:#FF4D00;min-width:28px;line-height:1}
+.rec-prep-txt{font-size:13px;color:#f0f0f0;line-height:1.55;flex:1}
+.rec-tip-garde{background:linear-gradient(135deg,rgba(255,77,0,.15),rgba(255,77,0,.04));border:1px solid rgba(255,77,0,.3);border-left:3px solid #FF4D00;border-radius:14px;padding:16px;margin-top:20px}
+.rec-tip-hdr{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.rec-tip-ttl{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:12px;letter-spacing:2px;color:#FF4D00;text-transform:uppercase}
+.rec-tip-body{font-size:13px;color:#f0f0f0;line-height:1.55}
+</style>
+</head>
+<body>
+
+<div class="page active" id="page-login">
+  <div class="login-wrap">
+    <div class="login-logo"><span>Garde</span> Method</div>
+    <div class="login-sub">Mi Entrenamiento</div>
+    <div class="login-card">
+      <div class="login-title">Ingresar</div>
+      <label class="flbl">Email</label>
+      <input class="inp" type="email" id="l-email" placeholder="tu@email.com" autocomplete="email"/>
+      <label class="flbl">Contraseña</label>
+      <input class="inp" type="password" id="l-pass" placeholder="••••••••" autocomplete="current-password"/>
+      <div class="err" id="l-err"></div>
+      <button class="btn-fire" id="l-btn">Ingresar</button>
+      <button id="resend-verification" style="display:none;width:100%;margin-top:8px;padding:12px;border-radius:12px;border:1px solid #1e1e1e;background:#1a1a1a;color:#FF4D00;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:13px;letter-spacing:1px;cursor:pointer" onclick="resendVerification()">Reenviar email de verificación</button>
+    </div>
+  </div>
+</div>
+
+<div class="page" id="page-app">
+  <div class="hdr">
+    <div class="logo"><span>Garde</span> Method</div>
+    <button class="role-tag" id="logout-btn">Salir</button>
+  </div>
+
+  <div id="tab-hoy" class="scroll">
+    <div id="hoy-content"><div class="loading">Cargando...</div></div>
+  </div>
+
+  <div id="tab-musculos" style="display:none;flex:1;overflow-y:auto;padding:18px 20px 90px">
+    <div class="slbl2" style="margin-bottom:14px">Músculos de hoy</div>
+    <div style="display:flex;gap:12px;justify-content:center;margin-bottom:20px">
+      <div style="text-align:center">
+        <div style="font-size:10px;color:#555;letter-spacing:1px;margin-bottom:6px;font-weight:600">FRENTE</div>
+        <svg id="body-front" viewBox="0 0 120 280" width="130" height="260" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="60" cy="22" rx="16" ry="18" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1"/>
+          <rect x="54" y="38" width="12" height="12" rx="3" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1"/>
+          <ellipse id="f-hombros-l" cx="28" cy="58" rx="14" ry="10" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1" class="muscle-zone" data-muscle="Hombros"/>
+          <ellipse id="f-hombros-r" cx="92" cy="58" rx="14" ry="10" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1" class="muscle-zone" data-muscle="Hombros"/>
+          <path id="f-pecho-l" d="M42 52 Q52 48 58 55 L56 78 Q46 80 38 72 Z" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1" class="muscle-zone" data-muscle="Pecho"/>
+          <path id="f-pecho-r" d="M78 52 Q68 48 62 55 L64 78 Q74 80 82 72 Z" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1" class="muscle-zone" data-muscle="Pecho"/>
+          <rect id="f-core-1" x="52" y="80" width="16" height="14" rx="3" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1" class="muscle-zone" data-muscle="Core"/>
+          <rect id="f-core-2" x="52" y="96" width="16" height="14" rx="3" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1" class="muscle-zone" data-muscle="Core"/>
+          <rect id="f-core-3" x="52" y="112" width="16" height="12" rx="3" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1" class="muscle-zone" data-muscle="Core"/>
+          <ellipse id="f-biceps-l" cx="22" cy="85" rx="8" ry="18" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1" class="muscle-zone" data-muscle="Bíceps"/>
+          <ellipse id="f-biceps-r" cx="98" cy="85" rx="8" ry="18" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1" class="muscle-zone" data-muscle="Bíceps"/>
+          <ellipse cx="18" cy="118" rx="6" ry="16" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1"/>
+          <ellipse cx="102" cy="118" rx="6" ry="16" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1"/>
+          <path d="M38 72 Q32 90 34 112 L42 108 Q40 88 44 78 Z" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1"/>
+          <path d="M82 72 Q88 90 86 112 L78 108 Q80 88 76 78 Z" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1"/>
+          <path d="M34 112 Q40 126 60 128 Q80 126 86 112 L78 108 Q74 120 60 122 Q46 120 42 108 Z" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1"/>
+          <path id="f-piernas-l" d="M42 128 Q36 148 38 172 L50 172 Q50 150 52 128 Z" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1" class="muscle-zone" data-muscle="Piernas"/>
+          <path id="f-piernas-r" d="M78 128 Q84 148 82 172 L70 172 Q70 150 68 128 Z" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1" class="muscle-zone" data-muscle="Piernas"/>
+          <path d="M52 128 Q56 148 56 172 L50 172 Q50 150 52 128 Z" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="0.5"/>
+          <path d="M68 128 Q64 148 64 172 L70 172 Q70 150 68 128 Z" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="0.5"/>
+          <ellipse cx="44" cy="176" rx="8" ry="6" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1"/>
+          <ellipse cx="76" cy="176" rx="8" ry="6" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1"/>
+          <ellipse cx="44" cy="200" rx="8" ry="18" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1"/>
+          <ellipse cx="76" cy="200" rx="8" ry="18" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1"/>
+          <ellipse cx="44" cy="222" rx="8" ry="5" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1"/>
+          <ellipse cx="76" cy="222" rx="8" ry="5" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1"/>
+          <path id="f-triceps-l" d="M14 68 Q10 80 14 96 L20 94 Q16 80 18 68 Z" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1" class="muscle-zone" data-muscle="Tríceps"/>
+          <path id="f-triceps-r" d="M106 68 Q110 80 106 96 L100 94 Q104 80 102 68 Z" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1" class="muscle-zone" data-muscle="Tríceps"/>
+          <path id="f-gluteos-l" d="M34 116 Q36 132 44 134 L44 128 Q40 126 36 114 Z" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1" class="muscle-zone" data-muscle="Glúteos"/>
+          <path id="f-gluteos-r" d="M86 116 Q84 132 76 134 L76 128 Q80 126 84 114 Z" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1" class="muscle-zone" data-muscle="Glúteos"/>
+        </svg>
+      </div>
+      <div style="text-align:center">
+        <div style="font-size:10px;color:#555;letter-spacing:1px;margin-bottom:6px;font-weight:600">ESPALDA</div>
+        <svg id="body-back" viewBox="0 0 120 280" width="130" height="260" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="60" cy="22" rx="16" ry="18" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1"/>
+          <rect x="54" y="38" width="12" height="12" rx="3" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1"/>
+          <path id="b-hombros-l" d="M44 42 Q34 48 26 56 Q30 62 42 60 Q46 52 48 46 Z" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1" class="muscle-zone" data-muscle="Hombros"/>
+          <path id="b-hombros-r" d="M76 42 Q86 48 94 56 Q90 62 78 60 Q74 52 72 46 Z" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1" class="muscle-zone" data-muscle="Hombros"/>
+          <path id="b-espalda-l" d="M42 56 Q34 70 32 100 L44 104 Q44 76 48 60 Z" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1" class="muscle-zone" data-muscle="Espalda"/>
+          <path id="b-espalda-r" d="M78 56 Q86 70 88 100 L76 104 Q76 76 72 60 Z" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1" class="muscle-zone" data-muscle="Espalda"/>
+          <path d="M44 60 Q52 56 60 56 Q68 56 76 60 L72 100 Q66 96 60 96 Q54 96 48 100 Z" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1"/>
+          <rect x="46" y="100" width="28" height="24" rx="4" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1"/>
+          <path id="b-gluteos-l" d="M34 116 Q36 140 46 144 L50 130 Q44 128 40 116 Z" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1" class="muscle-zone" data-muscle="Glúteos"/>
+          <path id="b-gluteos-r" d="M86 116 Q84 140 74 144 L70 130 Q76 128 80 116 Z" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1" class="muscle-zone" data-muscle="Glúteos"/>
+          <path d="M46 124 Q52 136 60 138 Q68 136 74 124 L70 120 Q66 130 60 132 Q54 130 50 120 Z" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1"/>
+          <ellipse id="b-triceps-l" cx="22" cy="85" rx="8" ry="18" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1" class="muscle-zone" data-muscle="Tríceps"/>
+          <ellipse id="b-triceps-r" cx="98" cy="85" rx="8" ry="18" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1" class="muscle-zone" data-muscle="Tríceps"/>
+          <ellipse cx="16" cy="85" rx="5" ry="14" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="0.5"/>
+          <ellipse cx="104" cy="85" rx="5" ry="14" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="0.5"/>
+          <ellipse cx="18" cy="118" rx="6" ry="16" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1"/>
+          <ellipse cx="102" cy="118" rx="6" ry="16" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1"/>
+          <path id="b-piernas-l" d="M42 144 Q36 162 38 184 L50 184 Q50 164 50 144 Z" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1" class="muscle-zone" data-muscle="Piernas"/>
+          <path id="b-piernas-r" d="M78 144 Q84 162 82 184 L70 184 Q70 164 70 144 Z" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1" class="muscle-zone" data-muscle="Piernas"/>
+          <ellipse cx="44" cy="188" rx="8" ry="6" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1"/>
+          <ellipse cx="76" cy="188" rx="8" ry="6" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1"/>
+          <ellipse cx="44" cy="210" rx="9" ry="18" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1"/>
+          <ellipse cx="76" cy="210" rx="9" ry="18" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1"/>
+          <ellipse cx="44" cy="230" rx="8" ry="5" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1"/>
+          <ellipse cx="76" cy="230" rx="8" ry="5" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1"/>
+        </svg>
+      </div>
+    </div>
+    <div style="display:flex;gap:16px;justify-content:center;margin-bottom:20px">
+      <div style="display:flex;align-items:center;gap:6px"><div style="width:12px;height:12px;border-radius:3px;background:#FF4D00"></div><span style="font-size:11px;color:#555">Trabajado hoy</span></div>
+      <div style="display:flex;align-items:center;gap:6px"><div style="width:12px;height:12px;border-radius:3px;background:#1a1a1a;border:1px solid #2a2a2a"></div><span style="font-size:11px;color:#555">Sin trabajar</span></div>
+    </div>
+    <div class="divider"></div>
+    <div class="slbl2">Semana completa</div>
+    <div id="week-list"></div>
+  </div>
+
+  <div id="tab-progreso" style="display:none;flex:1;overflow-y:auto;padding:18px 20px 90px">
+    <div id="progreso-content"></div>
+  </div>
+
+  <div id="tab-nutricion" style="display:none;flex:1;overflow-y:auto;padding:18px 20px 90px">
+    <div id="nutricion-content"></div>
+  </div>
+
+  <nav class="nav">
+    <button class="nb on" onclick="switchTab('hoy')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <span>Hoy</span>
+    </button>
+    <button class="nb" onclick="switchTab('musculos')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6.5 6.5S3 7 3 10.5c0 1.5.5 3 2 4l-1 5h2l1-4h2v4h2v-4l1.5.5 1 3.5h2l-1-4.5C17 14 18 12 18 10c0-3.5-3.5-4-3.5-4"/></svg>
+      <span>Músculos</span>
+    </button>
+    <button class="nb" onclick="switchTab('progreso')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>
+      <span>Progreso</span>
+    </button>
+    <button class="nb" onclick="switchTab('nutricion')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 2v20M14 2v5a2 2 0 0 0 2 2h2M6 2v7a3 3 0 0 1-3 3v10h3V12h0"/></svg>
+      <span>Nutrición</span>
+    </button>
+  </nav>
+</div>
+
+<div class="timer-overlay" id="timer-overlay">
+  <div class="timer-label" id="timer-label">Descanso</div>
+  <div class="timer-circle" id="timer-circle">
+    <div>
+      <div class="timer-num" id="timer-num">60</div>
+      <div class="timer-sec" style="text-align:center">seg</div>
+    </div>
+  </div>
+  <div class="timer-ex" id="timer-ex-name"></div>
+  <div class="timer-next" id="timer-next-ex"></div>
+  <button class="timer-skip" id="timer-skip-btn">Saltear descanso</button>
+</div>
+
+<div class="timer-overlay" id="timer-picker" style="justify-content:flex-end;padding-bottom:0">
+  <div style="background:#111;border-radius:20px 20px 0 0;padding:24px 20px 40px;width:100%;border-top:1px solid #1e1e1e">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:20px;letter-spacing:2px;text-transform:uppercase;margin-bottom:16px">⏱ Iniciar descanso</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px">
+      <button onclick="startTimerManual(30)" style="background:#1a1a1a;border:1px solid #1e1e1e;border-radius:10px;padding:14px;color:#f0f0f0;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:16px;cursor:pointer">30s</button>
+      <button onclick="startTimerManual(45)" style="background:#1a1a1a;border:1px solid #1e1e1e;border-radius:10px;padding:14px;color:#f0f0f0;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:16px;cursor:pointer">45s</button>
+      <button onclick="startTimerManual(60)" style="background:#FF4D00;border:none;border-radius:10px;padding:14px;color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:16px;cursor:pointer">60s</button>
+      <button onclick="startTimerManual(90)" style="background:#1a1a1a;border:1px solid #1e1e1e;border-radius:10px;padding:14px;color:#f0f0f0;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:16px;cursor:pointer">90s</button>
+      <button onclick="startTimerManual(120)" style="background:#1a1a1a;border:1px solid #1e1e1e;border-radius:10px;padding:14px;color:#f0f0f0;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:16px;cursor:pointer">2 min</button>
+      <button onclick="startTimerManual(180)" style="background:#1a1a1a;border:1px solid #1e1e1e;border-radius:10px;padding:14px;color:#f0f0f0;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:16px;cursor:pointer">3 min</button>
+    </div>
+    <button onclick="closeTimerPicker()" style="width:100%;padding:14px;border-radius:10px;background:#1a1a1a;border:1px solid #1e1e1e;color:#555;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:14px;letter-spacing:1px;cursor:pointer">Cancelar</button>
+  </div>
+</div>
+
+<button id="float-timer-btn" onclick="openTimerPicker()" style="display:none;position:fixed;bottom:75px;right:16px;width:56px;height:56px;border-radius:50%;background:#FF4D00;border:none;color:#fff;font-size:22px;cursor:pointer;z-index:400;box-shadow:0 4px 16px rgba(255,77,0,.4)">⏱</button>
+
+<div class="rec-modal" id="rec-modal">
+  <div class="rec-modal-hdr">
+    <button class="rec-modal-back" onclick="closeReceta()">←</button>
+    <div class="rec-modal-ttl" id="rec-modal-ttl">Receta</div>
+  </div>
+  <div class="rec-modal-body" id="rec-modal-body"></div>
+</div>
+
+<div class="achievement-overlay" id="achievement-overlay">
+  <div class="achievement-box" id="achievement-box">
+    <div class="achievement-glow"></div>
+    <span class="achievement-emoji" id="ach-emoji">🏆</span>
+    <div class="achievement-title" id="ach-title">¡Logro!</div>
+    <div class="achievement-msg" id="ach-msg">Mensaje</div>
+    <button class="achievement-btn" id="ach-btn">¡Gracias!</button>
+  </div>
+</div>
+
+<script>
+firebase.initializeApp({
+  apiKey: "AIzaSyDURhnrB62ri8vc0NwFBXriZM9duE_WxR4",
+  authDomain: "garde-method.firebaseapp.com",
+  projectId: "garde-method",
+  storageBucket: "garde-method.firebasestorage.app",
+  messagingSenderId: "545565798873",
+  appId: "1:545565798873:web:0c37d53180c7d91ccae9c8"
+});
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+const MUSCLES = ["Pecho","Espalda","Hombros","Bíceps","Tríceps","Piernas","Glúteos","Core","Cardio"];
+const MONTHS = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+
+let myData = null;
+let myRoutines = [];
+let checked = {};
+let selectedRoutineId = null;
+let currentTab = 'hoy';
+let myUid = null;
+let weights = {};
+
+function todayKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+}
+
+async function resendVerification() {
+  const email = document.getElementById('l-email').value.trim();
+  const pass = document.getElementById('l-pass').value;
+  try {
+    const cred = await auth.signInWithEmailAndPassword(email, pass);
+    await cred.user.sendEmailVerification();
+    await auth.signOut();
+    document.getElementById('l-err').textContent = 'Email reenviado. Revisá tu bandeja de entrada.';
+    document.getElementById('resend-verification').style.display = 'none';
+  } catch(e) {}
+}
+
+auth.onAuthStateChanged(user => {
+  if (user) {
+    myUid = user.uid;
+    loadMyData(user.uid);
+    loadChecks(user.uid);
+    loadWeights(user.uid);
+    showPage('page-app');
+    document.getElementById('float-timer-btn').style.display = 'block';
+  } else {
+    myUid = null;
+    checked = {};
+    showPage('page-login');
+  }
+});
+
+document.getElementById('l-btn').onclick = async () => {
+  const email = document.getElementById('l-email').value.trim();
+  const pass = document.getElementById('l-pass').value;
+  const errEl = document.getElementById('l-err');
+  errEl.textContent = '';
+  if (!email || !pass) { errEl.textContent = 'Completá email y contraseña'; return; }
+  document.getElementById('l-btn').textContent = 'Ingresando...';
+  try {
+    await auth.signInWithEmailAndPassword(email, pass);
+    document.getElementById('l-btn').textContent = 'Ingresar';
+  } catch(e) {
+    errEl.textContent = 'Email o contraseña incorrectos';
+    document.getElementById('l-btn').textContent = 'Ingresar';
+  }
+};
+
+document.getElementById('l-pass').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('l-btn').click();
+});
+
+document.getElementById('logout-btn').onclick = () => auth.signOut();
+
+async function markMyAttendance() {
+  if (!myUid || !myData) return;
+  const todayStr = todayKey();
+  if (myData.lastAttendance === todayStr) return;
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = `${yesterday.getFullYear()}-${yesterday.getMonth()+1}-${yesterday.getDate()}`;
+  const currentStreak = myData.lastAttendance === yesterdayStr ? (myData.streak || 0) + 1 : 1;
+  const maxStreak = Math.max(currentStreak, myData.maxStreak || 0);
+  const attendanceDays = myData.attendanceDays || [];
+  if (!attendanceDays.includes(todayStr)) attendanceDays.push(todayStr);
+  await db.collection('students').doc(myUid).update({
+    attendance: (myData.attendance || 0) + 1,
+    totalSessions: (myData.totalSessions || 0) + 1,
+    lastAttendance: todayStr,
+    streak: currentStreak,
+    maxStreak: maxStreak,
+    attendanceDays: attendanceDays
+  });
+}
+
+function loadMyData(uid) {
+  db.collection('students').doc(uid).onSnapshot(snap => {
+    if (!snap.exists) return;
+    myData = { id: snap.id, ...snap.data() };
+    loadRoutines(uid);
+    renderProgreso();
+    checkAchievements(myData);
+    checkPaymentAlert(myData);
+    checkWeeklyReport(myData);
+  });
+}
+
+function loadRoutines(uid) {
+  db.collection('students').doc(uid).collection('routines').onSnapshot(snap => {
+    myRoutines = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(r => r.status !== 'archived');
+    if (!selectedRoutineId && myRoutines.length > 0) selectedRoutineId = myRoutines[0].id;
+    if (selectedRoutineId && !myRoutines.find(r => r.id === selectedRoutineId)) {
+      selectedRoutineId = myRoutines.length > 0 ? myRoutines[0].id : null;
+    }
+    renderHoy();
+    renderMusculos();
+    renderWeekList();
+  });
+}
+
+function renderHoy() {
+  if (!myData) return;
+  const el = document.getElementById('hoy-content');
+  const todayStr = todayKey();
+  const attendedToday = myData.lastAttendance === todayStr;
+  const streak = myData.streak || 0;
+  const maxStreak = myData.maxStreak || 0;
+
+  const streakHtml = streak > 0 ? `
+    <div style="background:#111;border-radius:14px;padding:14px 16px;margin-bottom:14px;border:1px solid #1e1e1e;display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="font-size:28px">${streak >= 7 ? '🔥' : streak >= 3 ? '⚡' : '💪'}</div>
+        <div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:22px;line-height:1">${streak} día${streak===1?'':'s'} seguidos</div>
+          <div style="font-size:11px;color:#555;margin-top:2px">Racha actual</div>
+        </div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:18px;color:#FF4D00">${maxStreak}</div>
+        <div style="font-size:10px;color:#555">Récord</div>
+      </div>
+    </div>` : '';
+
+  const hasMsg = myData.coachMessage && myData.coachMessageExpiry && Date.now() < myData.coachMessageExpiry;
+  // Generar key única del mensaje para trackear si ya lo vio
+  const msgKey = hasMsg ? `seen_msg_${myUid}_${myData.coachMessageExpiry}` : '';
+  const alreadySeen = hasMsg && localStorage.getItem(msgKey);
+  const msgHtml = (hasMsg && !alreadySeen) ? `
+    <div id="coach-msg-card" style="background:linear-gradient(135deg,rgba(255,77,0,.15),rgba(255,77,0,.05));border:1px solid rgba(255,77,0,.3);border-radius:14px;padding:16px;margin-bottom:14px;position:relative">
+      <button onclick="dismissCoachMsg('${msgKey}')" style="position:absolute;top:10px;right:10px;background:#1a1a1a;border:1px solid #333;color:#888;width:26px;height:26px;border-radius:50%;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;padding:0" title="Marcar como leído">✕</button>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:11px;letter-spacing:2px;color:#FF4D00;text-transform:uppercase;margin-bottom:6px">💬 Mensaje de tu entrenador</div>
+      <div style="font-size:14px;color:#f0f0f0;line-height:1.5;padding-right:30px">${myData.coachMessage}</div>
+      <div style="font-size:10px;color:#555;margin-top:6px">${myData.coachMessageAt||''}</div>
+    </div>` : '';
+
+  const heroHtml = `
+    <div class="hero">
+      <div class="hero-av" style="background:${myData.color||'#FF4D00'}">${myData.avatar||'??'}</div>
+      <div style="flex:1">
+        <div class="hero-name">${myData.name}</div>
+        <div class="hero-sub">${myData.goal||''} · ${myData.attendance||0} asistencias</div>
+      </div>
+    </div>
+    <button onclick="markMyAttendance()" style="width:100%;margin-bottom:14px;padding:14px;border-radius:12px;border:none;background:${attendedToday ? '#1a1a1a' : '#00E676'};color:${attendedToday ? '#555' : '#080808'};font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:15px;letter-spacing:2px;text-transform:uppercase;cursor:${attendedToday ? 'default' : 'pointer'}">
+      ${attendedToday ? '✓ Asistencia registrada hoy' : '📍 Registrar mi asistencia'}
+    </button>`;
+
+  if (!myRoutines.length) {
+    el.innerHTML = heroHtml + streakHtml + msgHtml + '<div class="empty"><div class="empty-icon">💪</div><div style="font-size:14px;font-weight:600;color:#f0f0f0">Tu semana está lista</div><div style="font-size:12px;color:#555;margin-top:6px">Tu entrenador está preparando las rutinas de esta semana</div></div>';
+    return;
+  }
+
+  const dayStrip = `<div class="day-strip">${myRoutines.map(r => `
+    <button class="day-btn ${r.id === selectedRoutineId ? 'active' : ''}" onclick="selectRoutine('${r.id}')">${r.day}</button>`).join('')}</div>`;
+
+  const r = myRoutines.find(x => x.id === selectedRoutineId) || myRoutines[0];
+  if (!r) { el.innerHTML = heroHtml + streakHtml + msgHtml + dayStrip; return; }
+
+  const exs = r.exercises || [];
+  const doneCount = exs.filter((_,i) => checked[`${r.id}-${i}`]).length;
+  const total = exs.length;
+  const allDone = total > 0 && doneCount === total;
+  const pct = total > 0 ? Math.round(doneCount/total*100) : 0;
+
+  const wh = `
+    <div class="wh">
+      <div class="wh-day">${r.day}</div>
+      <div class="wh-title">${r.label}</div>
+      <div class="muscle-tags">${(r.muscles||[]).map(m=>`<span class="mtag">${m}</span>`).join('')}</div>
+      <div class="prog-row">
+        <span class="prog-lbl">${doneCount}/${total} ejercicios</span>
+        <span class="prog-num ${allDone?'done':''}">${pct}%</span>
+      </div>
+      <div class="pbar"><div class="pfill ${allDone?'done':''}" style="width:${pct}%"></div></div>
+    </div>`;
+
+  const banner = allDone ? `
+    <div class="done-banner">
+      <div class="done-icon">🏆</div>
+      <div class="done-title">¡Entrenamiento completado!</div>
+      <div class="done-sub">Gran trabajo hoy, ${myData.name.split(' ')[0]}.</div>
+    </div>` : '';
+
+  // Generar lista de ejercicios agrupando biseries/triseries
+  const exList = (() => {
+    let html = '';
+    let i = 0;
+    let visualNum = 0;
+    while (i < exs.length) {
+      const ex = exs[i];
+      if (ex.grupoId) {
+        // Encontrar todos los miembros del grupo
+        const gid = ex.grupoId;
+        const members = [];
+        const memberIndices = [];
+        let j = i;
+        while (j < exs.length && exs[j].grupoId === gid) {
+          members.push(exs[j]);
+          memberIndices.push(j);
+          j++;
+        }
+        visualNum++;
+        const groupNum = visualNum;
+        const tagText = members.length === 2 ? '🔗 BISERIE' : members.length === 3 ? '🔗 TRISERIE' : '🔗 SUPERSERIE';
+        // Un grupo se considera "done" si TODOS sus miembros están done
+        const allDone = memberIndices.every(idx => checked[`${r.id}-${idx}`]);
+        const groupKey = `${r.id}-group-${gid}`;
+        const restFinal = members[members.length-1].rest || '';
+        html += `<div class="ss-group ${allDone?'done':''}">
+          <div class="ss-header">
+            <div class="ss-tag">${tagText}</div>
+            <div class="ss-hint">Ejecutá ${members.length === 2 ? 'los dos' : 'los tres'} ejercicios seguidos, después descansá</div>
+          </div>
+          ${members.map((m, idx) => {
+            const realIdx = memberIndices[idx];
+            const k = `${r.id}-${realIdx}`;
+            const w = weights[k] || '';
+            const lastW = weights[`prev-${k}`] || '';
+            return `<div class="ss-item">
+              <div class="ss-item-head">
+                <div class="ss-num">${groupNum}${String.fromCharCode(65+idx)}</div>
+                <div style="flex:1">
+                  <div class="ss-name ${allDone?'done':''}">${m.name}</div>
+                  <div class="ss-det">${m.sets} series × ${m.reps} reps</div>
+                  ${m.note?`<div class="ss-note">↳ ${m.note}</div>`:''}
+                  ${m.video?`<a href="${m.video}" target="_blank" onclick="event.stopPropagation()" style="display:inline-block;margin-top:6px;font-size:11px;font-weight:700;color:#FF4D00;text-decoration:none;padding:4px 12px;border:1px solid #FF4D00;border-radius:20px;letter-spacing:.5px">▶ Ver video</a>`:''}
+                </div>
+                <div class="ss-badge">${m.sets}×${m.reps}</div>
+              </div>
+              <div class="ss-weight-row" onclick="event.stopPropagation()">
+                <div style="font-size:11px;color:#555;font-weight:600;flex-shrink:0">Carga:</div>
+                <input type="number" placeholder="kg" value="${w}" onclick="event.stopPropagation()" onchange="saveWeight('${k}', this.value)"
+                  style="width:70px;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;padding:6px 10px;color:#f0f0f0;font-size:13px;font-weight:700;outline:none;-webkit-appearance:none"/>
+                <div style="font-size:11px;color:#555">kg</div>
+                ${lastW ? `<div style="font-size:11px;color:#555;margin-left:4px">· Anterior: <span style="color:#FF4D00;font-weight:700">${lastW}kg</span></div>` : ''}
+              </div>
+            </div>`;
+          }).join('')}
+          <div class="ss-footer" onclick="toggleGroup('${r.id}','${gid}')">
+            <div class="chk ${allDone?'done':''}">${allDone?'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#080808" stroke-width="3"><polyline points="20,6 9,17 4,12"/></svg>':''}</div>
+            <div class="ss-complete-lbl ${allDone?'done':''}">Serie completada</div>
+            ${restFinal?`<div class="ss-rest">descanso: ${restFinal}</div>`:''}
+          </div>
+        </div>`;
+        i = j;
+      } else {
+        // Ejercicio suelto normal (lógica existente)
+        const k = `${r.id}-${i}`;
+        const d = !!checked[k];
+        const w = weights[k] || '';
+        const lastW = weights[`prev-${k}`] || '';
+        visualNum++;
+        html += `
+      <div class="ec ${d?'done':''}" style="flex-direction:column;align-items:stretch;gap:0">
+        <div style="display:flex;align-items:center;gap:12px" onclick="toggleEx('${k}')">
+          <div class="chk ${d?'done':''}">${d?'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#080808" stroke-width="3"><polyline points="20,6 9,17 4,12"/></svg>':''}</div>
+          <div style="flex:1">
+            <div class="ec-name ${d?'done':''}">${ex.name}</div>
+            <div class="ec-det">${ex.sets} series × ${ex.reps} reps · ${ex.rest}</div>
+            ${ex.note?`<div class="ec-note">↳ ${ex.note}</div>`:''}
+            ${ex.video?`<a href="${ex.video}" target="_blank" onclick="event.stopPropagation()" style="display:inline-block;margin-top:6px;font-size:11px;font-weight:700;color:#FF4D00;text-decoration:none;padding:4px 12px;border:1px solid #FF4D00;border-radius:20px;letter-spacing:.5px">▶ Ver video</a>`:''}
+          </div>
+          <div>
+            <div class="ec-badge ${d?'done':''}">${ex.sets}×${ex.reps}</div>
+            <div class="ec-rest">${ex.rest}</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid #1e1e1e" onclick="event.stopPropagation()">
+          <div style="font-size:11px;color:#555;font-weight:600;flex-shrink:0">Carga usada:</div>
+          <input type="number" placeholder="kg" value="${w}" onclick="event.stopPropagation()" onchange="saveWeight('${k}', this.value)"
+            style="width:70px;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;padding:6px 10px;color:#f0f0f0;font-size:13px;font-weight:700;outline:none;-webkit-appearance:none"/>
+          <div style="font-size:11px;color:#555">kg</div>
+          ${lastW ? `<div style="font-size:11px;color:#555;margin-left:4px">· Anterior: <span style="color:#FF4D00;font-weight:700">${lastW}kg</span></div>` : ''}
+        </div>
+      </div>`;
+        i++;
+      }
+    }
+    return html;
+  })();
+
+  const tabataBlocks = r.tabataBlocks || [];
+  const tabataHtml = tabataBlocks.map((t, ti) => `
+    <div style="background:#111;border-radius:14px;margin-bottom:8px;border:1px solid #FF4D00;overflow:hidden">
+      <div style="padding:14px 16px;background:rgba(255,77,0,0.08)">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:16px;color:#FF4D00;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px">⚡ TABATA</div>
+        <div style="font-size:12px;color:#555">${t.work}'' trabajo / ${t.rest}'' descanso / ${t.rounds} rondas</div>
+        <div style="margin-top:8px;margin-bottom:12px">
+          ${t.exercises.map(ex => `<div style="font-size:13px;color:#f0f0f0;padding:3px 0">• ${ex}</div>`).join('')}
+        </div>
+        <button onclick="startTabata(${ti})" style="width:100%;padding:12px;border-radius:10px;border:none;background:#FF4D00;color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:15px;letter-spacing:2px;text-transform:uppercase;cursor:pointer">▶ Iniciar Tabata</button>
+      </div>
+    </div>`).join('');
+
+  el.innerHTML = heroHtml + streakHtml + msgHtml + dayStrip + wh + banner +
+    `<div class="slbl2">Ejercicios</div>` + exList + tabataHtml;
+}
+
+function loadChecks(uid) {
+  const key = todayKey();
+  db.collection('students').doc(uid).collection('checks').doc(key).onSnapshot(snap => {
+    if (snap.exists) { checked = snap.data().exercises || {}; }
+    else { checked = {}; }
+    renderHoy();
+  });
+}
+
+function loadWeights(uid) {
+  const key = todayKey();
+  db.collection('students').doc(uid).collection('weights').doc(key).onSnapshot(snap => {
+    if (snap.exists) {
+      const todayW = snap.data().exercises || {};
+      Object.keys(todayW).forEach(k => weights[k] = todayW[k]);
+    }
+    renderHoy();
+  });
+  db.collection('students').doc(uid).collection('weights')
+    .orderBy('date', 'desc').limit(2).get().then(snap => {
+      snap.docs.forEach((d, idx) => {
+        if (idx > 0) {
+          const prevW = d.data().exercises || {};
+          Object.keys(prevW).forEach(k => weights[`prev-${k}`] = prevW[k]);
+        }
+      });
+      renderHoy();
+    }).catch(() => {});
+}
+
+async function saveWeight(k, val) {
+  if (!myUid || !val) return;
+  const key = todayKey();
+  weights[k] = val;
+  try {
+    await db.collection('students').doc(myUid).collection('weights').doc(key).set({
+      exercises: weights, date: key
+    }, { merge: true });
+  } catch(e) {}
+}
+
+function selectRoutine(id) { selectedRoutineId = id; renderHoy(); }
+
+async function toggleEx(k) {
+  checked[k] = !checked[k];
+  renderHoy();
+  if (myUid) {
+    const key = todayKey();
+    await db.collection('students').doc(myUid).collection('checks').doc(key).set({
+      exercises: checked, date: key
+    });
+  }
+}
+
+async function toggleGroup(routineId, grupoId) {
+  const r = myRoutines.find(x => x.id === routineId);
+  if (!r) return;
+  const exs = r.exercises || [];
+  // Encontrar los índices de los ejercicios de este grupo
+  const indices = [];
+  exs.forEach((ex, i) => { if (ex.grupoId === grupoId) indices.push(i); });
+  if (!indices.length) return;
+  // Si todos están done, desmarcar todos. Si no, marcar todos.
+  const allDone = indices.every(idx => checked[`${routineId}-${idx}`]);
+  const newVal = !allDone;
+  indices.forEach(idx => { checked[`${routineId}-${idx}`] = newVal; });
+  renderHoy();
+  if (myUid) {
+    const key = todayKey();
+    await db.collection('students').doc(myUid).collection('checks').doc(key).set({
+      exercises: checked, date: key
+    });
+  }
+}
+
+// Sistema de sonido con Web Audio API (funciona offline, sin archivos externos)
+let audioCtx = null;
+function initAudio() {
+  if (!audioCtx) {
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+    catch(e) { console.log('Audio no disponible'); }
+  }
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+}
+function playBeep(freq, duration, volume) {
+  if (!audioCtx) return;
+  try {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    gain.gain.value = 0;
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    const now = audioCtx.currentTime;
+    gain.gain.linearRampToValueAtTime(volume || 0.3, now + 0.01);
+    gain.gain.linearRampToValueAtTime(0, now + duration);
+    osc.start(now);
+    osc.stop(now + duration);
+  } catch(e) {}
+}
+function beepCountdown() { playBeep(800, 0.1, 0.25); }
+function beepWorkStart() {
+  playBeep(600, 0.12, 0.35);
+  setTimeout(() => playBeep(900, 0.25, 0.4), 130);
+}
+function beepRestStart() { playBeep(300, 0.4, 0.35); }
+function beepFinish() {
+  playBeep(500, 0.15, 0.4);
+  setTimeout(() => playBeep(700, 0.15, 0.4), 160);
+  setTimeout(() => playBeep(1000, 0.4, 0.45), 320);
+}
+
+function startTabata(blockIndex) {
+  const r = myRoutines.find(x => x.id === selectedRoutineId) || myRoutines[0];
+  if (!r) return;
+  const t = (r.tabataBlocks || [])[blockIndex];
+  if (!t) return;
+  initAudio(); // requerido por iOS/Chrome móvil tras interacción del usuario
+  // Filtrar ejercicios vacíos (los slots en blanco no cuentan como estación)
+  const stations = (t.exercises || []).filter(e => e && e.trim());
+  if (!stations.length) { alert('Este Tabata no tiene ejercicios cargados'); return; }
+  let currentRound = 1;
+  let currentExIdx = 0;
+  let isWork = true;
+  let seconds = t.work;
+  if (timerInterval) clearInterval(timerInterval);
+  const overlay = document.getElementById('timer-overlay');
+  const circle = document.getElementById('timer-circle');
+  function updateDisplay() {
+    document.getElementById('timer-num').textContent = seconds;
+    document.getElementById('timer-label').textContent = isWork ? '🔥 TRABAJO' : '😮‍💨 DESCANSO';
+    document.getElementById('timer-ex-name').textContent = stations[currentExIdx] || '';
+    document.getElementById('timer-next-ex').textContent = `Ronda ${currentRound} de ${t.rounds}`;
+    overlay.classList.remove('work','rest');
+    circle.classList.remove('work','rest','warn');
+    if (isWork) { overlay.classList.add('work'); circle.classList.add('work'); }
+    else { overlay.classList.add('rest'); circle.classList.add('rest'); }
+  }
+  updateDisplay();
+  overlay.classList.add('show');
+  beepWorkStart();
+  timerInterval = setInterval(() => {
+    seconds--;
+    document.getElementById('timer-num').textContent = seconds;
+    // Beeps de aviso en los últimos 3 segundos
+    if (seconds === 3 || seconds === 2 || seconds === 1) {
+      beepCountdown();
+      circle.classList.add('warn');
+    } else {
+      circle.classList.remove('warn');
+    }
+    if (seconds <= 0) {
+      if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+      if (isWork) {
+        // Termina el trabajo → pasa al descanso (sigue siendo la misma ronda)
+        isWork = false;
+        seconds = t.rest;
+        beepRestStart();
+        updateDisplay();
+      } else {
+        // Termina el descanso → pasa a la siguiente ronda
+        currentRound++;
+        if (currentRound > t.rounds) {
+          // FIN del Tabata
+          clearInterval(timerInterval);
+          overlay.classList.remove('show','work','rest');
+          circle.classList.remove('work','rest','warn');
+          if (navigator.vibrate) navigator.vibrate([300, 100, 300, 100, 300]);
+          beepFinish();
+          return;
+        }
+        // Rotar a la siguiente estación (cíclico)
+        currentExIdx = (currentExIdx + 1) % stations.length;
+        isWork = true;
+        seconds = t.work;
+        beepWorkStart();
+        updateDisplay();
+      }
+    }
+  }, 1000);
+}
+
+function renderMusculos() {
+  const r = myRoutines.find(x => x.id === selectedRoutineId) || myRoutines[0];
+  const activeM = r ? (r.muscles||[]) : [];
+  document.querySelectorAll('.muscle-zone').forEach(zone => {
+    const muscle = zone.getAttribute('data-muscle');
+    const isActive = activeM.includes(muscle);
+    zone.style.fill = isActive ? '#FF4D00' : '#1a1a1a';
+    zone.style.opacity = isActive ? '1' : '0.6';
+    zone.style.filter = isActive ? 'drop-shadow(0 0 4px rgba(255,77,0,0.6))' : 'none';
+  });
+}
+
+function renderWeekList() {
+  document.getElementById('week-list').innerHTML = myRoutines.length === 0
+    ? '<div class="empty"><div class="empty-icon">📋</div><div style="font-size:14px">Sin rutinas asignadas</div></div>'
+    : myRoutines.map(r => `
+      <div class="wcard">
+        <div class="wd">${r.day}</div>
+        <div class="wt">${r.label}</div>
+        <div class="muscle-tags">${(r.muscles||[]).map(m=>`<span class="mtag">${m}</span>`).join('')}</div>
+        <div class="wcount">${(r.exercises||[]).length} ejercicios</div>
+      </div>`).join('');
+}
+
+function buildCalendar(attendanceDays) {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = today.getMonth();
+  const monthNames = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const dayNames = ['D','L','M','M','J','V','S'];
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const todayDate = today.getDate();
+
+  let cal = `
+    <div style="background:#111;border-radius:14px;padding:16px;margin-bottom:14px;border:1px solid #1e1e1e">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:10px;letter-spacing:2px;color:#555;text-transform:uppercase;margin-bottom:12px">📅 ${monthNames[month]} ${year}</div>
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center;margin-bottom:8px">
+        ${dayNames.map(d => `<div style="font-size:10px;color:#555;font-weight:600;padding:2px">${d}</div>`).join('')}
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center">`;
+
+  for (let i = 0; i < firstDay; i++) cal += `<div></div>`;
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateKey = `${year}-${month+1}-${d}`;
+    const trained = attendanceDays.includes(dateKey);
+    const isToday = d === todayDate;
+    let bg = 'transparent', color = '#555', border = 'none', fontWeight = '400';
+    if (trained) { bg = '#FF4D00'; color = '#fff'; fontWeight = '700'; }
+    if (isToday && !trained) { border = '1px solid #FF4D00'; color = '#FF4D00'; fontWeight = '700'; }
+    cal += `<div style="padding:5px 2px;border-radius:6px;background:${bg};color:${color};font-size:12px;font-weight:${fontWeight};border:${border}">${d}</div>`;
+  }
+  cal += `</div></div>`;
+  return cal;
+}
+
+function renderProgreso() {
+  if (!myData) return;
+  const history = myData.history || [];
+  const att = myData.attendance || 0;
+  const total = myData.totalSessions || 0;
+  const pct = total > 0 ? Math.round(att/total*100) : 0;
+  const attendanceDays = myData.attendanceDays || [];
+  const calHtml = buildCalendar(attendanceDays);
+
+  let payHtml = '';
+  if (myData.paymentDue) {
+    const today = new Date(); today.setHours(0,0,0,0);
+    const due = new Date(myData.paymentDue); due.setHours(0,0,0,0);
+    const diff = Math.round((due - today) / (1000*60*60*24));
+    const formattedDue = `${due.getDate()}/${due.getMonth()+1}/${due.getFullYear()}`;
+    let payColor = '#00E676', payMsg = `Al día — vence el ${formattedDue}`;
+    if (diff < 0) { payColor = '#FF1744'; payMsg = `Vencido hace ${Math.abs(diff)} días — contactá a tu entrenador`; }
+    else if (diff === 0) { payColor = '#FF4D00'; payMsg = `Vence HOY — contactá a tu entrenador`; }
+    else if (diff <= 3) { payColor = '#FFD600'; payMsg = `Vence en ${diff} día${diff===1?'':'s'} — el ${formattedDue}`; }
+    payHtml = `
+      <div style="background:#111;border-radius:14px;padding:16px;margin-bottom:14px;border:1px solid #1e1e1e">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:10px;letter-spacing:2px;color:#555;text-transform:uppercase;margin-bottom:8px">💳 Estado de pago</div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="font-size:28px">${diff < 0 ? '🔴' : diff <= 3 ? '🟡' : '🟢'}</div>
+          <div style="font-size:13px;color:${payColor};font-weight:600">${payMsg}</div>
+        </div>
+      </div>`;
+  }
+
+  let chartHtml = '';
+  if (history.length >= 2) {
+    const ws = history.map(h => h.weight);
+    const mn = Math.min(...ws) - .5, mx = Math.max(...ws) + .5;
+    const norm = w => Math.max(6, ((w-mn)/(mx-mn))*100);
+    const rev = [...history].reverse();
+    chartHtml = `<div class="chart-box">
+      <div class="chart-lbl">Evolución de peso — kg</div>
+      <div class="chart-bars">
+        ${rev.map((h,i) => `<div class="cbw"><div class="cb ${i===rev.length-1?'last':''}" style="height:${norm(h.weight)}%"></div><div class="cbl">${h.date.split(' ')[0]}</div></div>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  document.getElementById('progreso-content').innerHTML = `
+    <div class="slbl2">Mi Progreso</div>
+    ${payHtml}
+    ${calHtml}
+    <div class="sgrid">
+      <div class="scell"><div class="snum">${att}</div><div class="slbl">Asistencias</div></div>
+      <div class="scell"><div class="snum">${pct}%</div><div class="slbl">% Asistencia</div></div>
+    </div>
+    <div style="background:#111;border-radius:14px;padding:0 14px;margin-bottom:14px;border:1px solid #1e1e1e">
+      <div style="padding:12px 0 8px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:12px;color:#555;font-weight:600">Asistencia del mes</span>
+        <span style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:15px;color:#FF4D00">${att}/${total}</span>
+      </div>
+      <div class="pbar" style="margin-bottom:14px"><div class="pfill" style="width:${pct}%"></div></div>
+    </div>
+    ${chartHtml}
+    <div class="slbl2">Historial de peso</div>
+    ${history.length === 0
+      ? '<div style="text-align:center;padding:20px;color:#555;font-size:13px">Sin registros aún</div>'
+      : `<div style="background:#111;border-radius:14px;padding:0 14px;border:1px solid #1e1e1e">
+          ${history.map(h => `<div class="hist-row"><div><div class="hdate">${h.date}</div>${h.note?`<div class="hnote">${h.note}</div>`:''}</div><div class="hw">${h.weight} <span style="font-size:12px;color:#555">kg</span></div></div>`).join('')}
+        </div>`}
+  `;
+}
+
+let paymentAlertChecked = false; // flag para que se chequee solo una vez por sesión
+
+function checkPaymentAlert(data) {
+  if (paymentAlertChecked) return; // ya se chequeó en esta sesión, no insistir
+  if (!data.paymentDue) return;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const due = new Date(data.paymentDue); due.setHours(0,0,0,0);
+  const diff = Math.round((due - today) / (1000*60*60*24));
+  if (diff > 3) return; // solo avisar si vence en 3 días o menos (incluye vencidos)
+  // Verificar si ya lo vio hoy con esta misma fecha de vencimiento
+  const todayKey = `${today.getFullYear()}-${today.getMonth()+1}-${today.getDate()}`;
+  const seenKey = `seen_payalert_${data.paymentDue}_${todayKey}`;
+  if (localStorage.getItem(seenKey)) {
+    paymentAlertChecked = true;
+    return;
+  }
+  paymentAlertChecked = true;
+  const msg = diff < 0 ? `Tu cuota está vencida hace ${Math.abs(diff)} días. Contactá a tu entrenador.`
+    : diff === 0 ? `Tu cuota vence HOY. Contactá a tu entrenador.`
+    : `Tu cuota vence en ${diff} día${diff===1?'':'s'}. ¡No te olvides!`;
+  setTimeout(() => {
+    document.getElementById('ach-emoji').textContent = '💳';
+    document.getElementById('ach-title').textContent = 'Aviso de pago';
+    document.getElementById('ach-msg').textContent = msg;
+    document.getElementById('achievement-overlay').classList.add('show');
+    showingAchievement = true;
+    // Marcar como visto en localStorage al mostrarlo
+    localStorage.setItem(seenKey, '1');
+  }, 2000);
+}
+
+const ACHIEVEMENTS = [
+  { id: 'streak_3', emoji: '⚡', title: '¡3 días seguidos!', msg: () => '3 entrenamientos seguidos. ¡Estás en racha!', check: (d) => (d.streak||0) >= 3 },
+  { id: 'streak_7', emoji: '🔥', title: '¡Semana perfecta!', msg: () => '7 días seguidos entrenando. ¡Eso es dedicación de élite!', check: (d) => (d.streak||0) >= 7 },
+  { id: 'streak_14', emoji: '🚀', title: '¡2 semanas seguidas!', msg: () => '14 días sin parar. ¡Sos una máquina!', check: (d) => (d.streak||0) >= 14 },
+  { id: 'first_login', emoji: '👋', title: '¡Bienvenido!', msg: name => `Hola ${name}! Tu entrenamiento personalizado está listo. ¡Vamos a lograr tus objetivos juntos!`, check: (d) => true },
+  { id: 'att_10', emoji: '🔥', title: '¡10 Asistencias!', msg: () => '10 sesiones completadas. La constancia es la clave del éxito. ¡Seguí así!', check: (d) => (d.attendance||0) >= 10 },
+  { id: 'att_25', emoji: '💪', title: '¡25 Asistencias!', msg: () => '25 sesiones. Ya sos parte del grupo que lo hace en serio. ¡Orgullo!', check: (d) => (d.attendance||0) >= 25 },
+  { id: 'att_50', emoji: '🏅', title: '¡50 Asistencias!', msg: () => '50 sesiones completadas. Eso es dedicación real. ¡Sos un ejemplo!', check: (d) => (d.attendance||0) >= 50 },
+  { id: 'att_100', emoji: '🏆', title: '¡100 Asistencias!', msg: () => '100 sesiones. Sos una máquina. Muy pocos llegan acá. ¡Respeto total!', check: (d) => (d.attendance||0) >= 100 },
+  { id: 'weight_3kg', emoji: '⬇️', title: '¡-3 kg!', msg: () => 'Bajaste 3kg desde que arrancaste. ¡El trabajo se ve!', check: (d) => { const h = d.history||[]; return h.length >= 2 && (h[h.length-1].weight - h[0].weight) <= -3; }},
+  { id: 'weight_5kg', emoji: '🎯', title: '¡-5 kg!', msg: () => '5kg menos desde el inicio. ¡Esto es un cambio real en tu vida!', check: (d) => { const h = d.history||[]; return h.length >= 2 && (h[h.length-1].weight - h[0].weight) <= -5; }},
+  { id: 'weight_10kg', emoji: '🌟', title: '¡-10 kg!', msg: () => '10kg de diferencia. ¡Impresionante! Sos otra persona. ¡Felicitaciones!', check: (d) => { const h = d.history||[]; return h.length >= 2 && (h[h.length-1].weight - h[0].weight) <= -10; }},
+  { id: 'month_1', emoji: '📅', title: '¡1 Mes!', msg: () => 'Un mes entrenando con Garde Method. Ya es un hábito. ¡Eso vale oro!', check: (d) => { if (!d.createdAt) return false; return (Date.now() - new Date(d.createdAt).getTime()) / (1000*60*60*24) >= 30; }},
+  { id: 'month_3', emoji: '🚀', title: '¡3 Meses!', msg: () => '3 meses de constancia. Los cambios físicos y mentales ya son evidentes. ¡Seguí!', check: (d) => { if (!d.createdAt) return false; return (Date.now() - new Date(d.createdAt).getTime()) / (1000*60*60*24) >= 90; }},
+];
+
+let achievementsQueue = [];
+let showingAchievement = false;
+
+async function checkAchievements(data) {
+  if (!myUid || !data) return;
+  try {
+    const snap = await db.collection('students').doc(myUid).collection('achievements').doc('unlocked').get();
+    const unlocked = snap.exists ? (snap.data().ids || []) : [];
+    const newUnlocked = [];
+    for (const ach of ACHIEVEMENTS) {
+      if (!unlocked.includes(ach.id) && ach.check(data)) {
+        newUnlocked.push(ach.id);
+        achievementsQueue.push(ach);
+      }
+    }
+    if (newUnlocked.length) {
+      await db.collection('students').doc(myUid).collection('achievements').doc('unlocked').set({ ids: [...unlocked, ...newUnlocked] });
+      showNextAchievement(data.name || '');
+    }
+  } catch(e) {}
+}
+
+function showNextAchievement(name) {
+  if (showingAchievement || achievementsQueue.length === 0) return;
+  const ach = achievementsQueue.shift();
+  showingAchievement = true;
+  document.getElementById('ach-emoji').textContent = ach.emoji;
+  document.getElementById('ach-title').textContent = ach.title;
+  document.getElementById('ach-msg').textContent = ach.msg(name);
+  document.getElementById('achievement-overlay').classList.add('show');
+}
+
+function closeAchievement() {
+  document.getElementById('achievement-overlay').classList.remove('show');
+  showingAchievement = false;
+  const name = myData ? myData.name.split(' ')[0] : '';
+  if (achievementsQueue.length > 0) setTimeout(() => showNextAchievement(name), 600);
+}
+
+const achBtn = document.getElementById('ach-btn');
+const achOverlay = document.getElementById('achievement-overlay');
+function handleAchClose(e) { e.preventDefault(); e.stopPropagation(); closeAchievement(); }
+achBtn.addEventListener('touchend', handleAchClose, { passive: false });
+achBtn.addEventListener('click', handleAchClose);
+achOverlay.addEventListener('touchend', (e) => { if (e.target === achOverlay) { e.preventDefault(); closeAchievement(); }}, { passive: false });
+achOverlay.addEventListener('click', (e) => { if (e.target === achOverlay) closeAchievement(); });
+
+async function checkWeeklyReport(data) {
+  if (!myUid) return;
+  const today = new Date();
+  if (today.getDay() !== 0) return;
+  const weekKey = `week-${today.getFullYear()}-${Math.floor((today - new Date(today.getFullYear(), 0, 1)) / (7*24*60*60*1000))}`;
+  try {
+    const snap = await db.collection('students').doc(myUid).collection('achievements').doc('weekly').get();
+    if (snap.exists && snap.data().lastWeek === weekKey) return;
+    const att = data.attendance || 0;
+    const streak = data.streak || 0;
+    const maxStreak = data.maxStreak || 0;
+    const name = data.name.split(' ')[0];
+    let emoji = '📊', title = '¡Resumen semanal!', msg = '';
+    if (streak >= 7) { emoji = '🔥'; title = '¡Semana perfecta!'; msg = `${name}, entrenaste todos los días esta semana. Solo el 3% de las personas mantiene esta constancia. ¡Sos élite!`; }
+    else if (streak >= 5) { emoji = '⚡'; title = '¡Gran semana!'; msg = `${name}, entrenaste ${streak} días esta semana. Estás en el top 10% de constancia. ¡Seguí así!`; }
+    else if (streak >= 3) { emoji = '💪'; title = '¡Buena semana!'; msg = `${name}, llevas ${streak} días seguidos entrenando. La mayoría de las personas no llega ni a 2. ¡Bien hecho!`; }
+    else if (att >= 50) { emoji = '🏅'; title = '¡50 entrenamientos!'; msg = `${name}, acumulaste ${att} entrenamientos en total. Eso equivale a más de ${Math.round(att*1.2)} horas de trabajo duro. ¡Respeto!`; }
+    else { emoji = '📅'; title = 'Nuevo comienzo'; msg = `${name}, cada semana es una nueva oportunidad. Esta semana podés empezar tu mejor racha. ¡Vos podés!`; }
+    await db.collection('students').doc(myUid).collection('achievements').doc('weekly').set({ lastWeek: weekKey });
+    setTimeout(() => { achievementsQueue.push({ emoji, title, msg: () => msg }); if (!showingAchievement) showNextAchievement(name); }, 3000);
+  } catch(e) {}
+}
+
+let timerInterval = null;
+let timerSeconds = 0;
+let timerEndTime = 0;  // timestamp absoluto de cuándo termina (para sobrevivir al background)
+let timerExName = '';
+let timerNextExName = '';
+
+function dismissCoachMsg(key) {
+  if (!key) return;
+  localStorage.setItem(key, '1');
+  const card = document.getElementById('coach-msg-card');
+  if (card) {
+    card.style.transition = 'opacity .3s, transform .3s';
+    card.style.opacity = '0';
+    card.style.transform = 'translateX(20px)';
+    setTimeout(() => card.remove(), 300);
+  }
+}
+
+function startTimer(seconds, exName, nextExName) {
+  if (timerInterval) clearInterval(timerInterval);
+  timerSeconds = seconds;
+  timerEndTime = Date.now() + (seconds * 1000); // timestamp absoluto de fin
+  timerExName = exName || '';
+  timerNextExName = nextExName || '';
+  document.getElementById('timer-num').textContent = timerSeconds;
+  document.getElementById('timer-ex-name').textContent = timerExName;
+  document.getElementById('timer-next-ex').textContent = timerNextExName ? `Próximo: ${timerNextExName}` : '';
+  document.getElementById('timer-circle').style.borderColor = '#FF4D00';
+  document.getElementById('timer-label').textContent = 'Descanso';
+  document.getElementById('timer-overlay').classList.add('show');
+  timerInterval = setInterval(tickTimer, 250); // tick más rápido para mejor precisión al volver
+}
+
+function tickTimer() {
+  // calcular segundos restantes a partir del timestamp de fin (sobrevive al background)
+  const remaining = Math.max(0, Math.ceil((timerEndTime - Date.now()) / 1000));
+  if (remaining !== timerSeconds) {
+    timerSeconds = remaining;
+    document.getElementById('timer-num').textContent = timerSeconds;
+    if (timerSeconds <= 5 && timerSeconds > 0) {
+      document.getElementById('timer-circle').style.borderColor = '#00E676';
+    }
+  }
+  if (remaining <= 0) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+    document.getElementById('timer-overlay').classList.remove('show');
+    if (navigator.vibrate) navigator.vibrate([300, 100, 300]);
+  }
+}
+
+// Recalcular el timer al volver al primer plano (cuando la pestaña/app vuelve a ser visible)
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && timerInterval) {
+    tickTimer(); // recalcular inmediatamente al volver
+  }
+});
+
+function stopTimer() { if (timerInterval) clearInterval(timerInterval); document.getElementById('timer-overlay').classList.remove('show'); }
+document.getElementById('timer-skip-btn').addEventListener('click', stopTimer);
+document.getElementById('timer-skip-btn').addEventListener('touchend', (e) => { e.preventDefault(); stopTimer(); });
+
+function openTimerPicker() { document.getElementById('timer-picker').classList.add('show'); }
+function closeTimerPicker() { document.getElementById('timer-picker').classList.remove('show'); }
+function startTimerManual(seconds) { closeTimerPicker(); startTimer(seconds, '', ''); }
+
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  ['hoy','musculos','progreso','nutricion'].forEach(t => {
+    const el = document.getElementById('tab-'+t);
+    if (el) el.style.display = t === tab ? 'block' : 'none';
+  });
+  document.querySelectorAll('.nb').forEach((b,i) => {
+    b.classList.toggle('on', ['hoy','musculos','progreso','nutricion'][i] === tab);
+  });
+  document.getElementById('float-timer-btn').style.display = tab === 'hoy' ? 'block' : 'none';
+  if (tab === 'musculos') { renderMusculos(); renderWeekList(); }
+  if (tab === 'progreso') renderProgreso();
+  if (tab === 'nutricion') renderNutricion();
+}
+
+/* ============================================
+   NUTRICIÓN — Recetas + Tip del día
+   ============================================ */
+
+const TIPS_DEL_DIA = [
+  "Si entrenás en ayunas más de 45 min, estás rompiendo músculo. Tomate una fruta con café 20 min antes y punto. El ayuno extremo no te hace más duro, te hace perder masa magra.",
+  "Hidratarte no es tomar agua solo cuando tenés sed. Apuntá a 35ml por kilo de peso por día. Si pesás 80kg, son 2,8 litros. En verano y día de entreno, sumale 500ml más.",
+  "Proteína post-entreno: no hace falta que sea en los 30 min sagrados. La ventana anabólica es más amplia de lo que te vendieron. Comé tu proteína dentro de las 2 hs post-entreno y estás bien.",
+  "Ni la grasa te engorda ni los carbos te engordan. Te engorda comer más calorías de las que gastás. Dejá de demonizar macros y empezá a controlar porciones.",
+  "1,6 a 2 gramos de proteína por kilo de peso corporal. Ese es el rango que funciona si entrenás fuerza. Arriba de 2,2g no hay evidencia de beneficio extra.",
+  "Desayuno de campeón: avena + huevos + fruta. Carbos complejos + proteína + fructosa para reponer glucógeno. Tres ingredientes, 10 minutos, y estás listo para entrenar a las 2 hs.",
+  "El café pre-entreno sí funciona. 3-6 mg de cafeína por kilo de peso, 30-45 min antes. Mejora fuerza, resistencia y concentración. Pero si entrenás de noche, cuidado con el sueño.",
+  "Dormir menos de 7 hs te frena más que saltar una comida. En sueño profundo liberás hormona del crecimiento. Dormir poco = menos ganancia muscular por más que entrenes bien.",
+  "Si tu objetivo es bajar grasa, déficit de 300-500 kcal diarias. Menos que eso, no ves resultados. Más que eso, perdés músculo y la metés al horno.",
+  "Los carbohidratos no son el enemigo del abdomen. El exceso calórico sí. La papa, el arroz y el boniato son combustible, no veneno.",
+  "Comer cada 3 hs no acelera el metabolismo. Podés hacer 3 comidas grandes o 6 chicas, lo importante son las calorías y proteínas totales del día.",
+  "Legumbres: garbanzos, lentejas, porotos. Proteína vegetal + fibra + hierro + saciedad. Baratísimas y rinden 2-3 días. Si no las tenés en la dieta, estás perdiendo plata y salud.",
+  "No necesitás suplementos para ganar músculo. Necesitás comer bien, dormir y levantar pesado. Los suplementos son el 5% del resultado, no el 80%.",
+  "Whey protein no hace magia. Es proteína en polvo. Si ya llegás a tu cuota diaria con comida real, no te cambia nada tomarla. Es practicidad, no milagro.",
+  "Ensalada antes del plato principal. Fibra + volumen = saciedad real. Truco viejo pero infalible para controlar porciones sin sufrir.",
+  "Huevo entero, no solo clara. La yema tiene colina, vitamina D, B12 y más de la mitad de la proteína del huevo. Sacarla es tirar plata y nutrientes.",
+  "La palta no engorda. Grasa buena, fibra, potasio, saciante. Media palta por día no mueve la balanza, te nutre y te llena.",
+  "Pre-entreno fuerte: 1g de carbohidrato por kilo de peso, 1-2 hs antes. Si entrenás a las 18hs, almorzás bien a las 13-14hs y llegás con pila.",
+  "Creatina monohidrato: 5g por día, todos los días. El único suplemento con evidencia dura. Barato, seguro, te da un plus real de fuerza y volumen.",
+  "Atracones de fin de semana te liquidan toda la semana de esfuerzo. Si comés 500 kcal menos de lunes a viernes y te mandás 3000 extra el sábado, estás en cero. Sin vueltas.",
+  "Comer lento = comer menos. Tu cerebro tarda 20 min en registrar saciedad. Si tragás en 10, comés el doble de lo que necesitás.",
+  "Alcohol: 7 kcal por gramo, casi tantas como la grasa. Sin nutrientes, te seca, te frena la síntesis proteica 24-48 hs. Una noche de birra te atrasa dos días de entreno.",
+  "El pescado no es opcional. Omega 3, proteína magra, bajo en calorías. 2-3 veces por semana mínimo. Salmón, atún, caballa, sardinas.",
+  "Fibra: 25-35g por día. No solo te regula el tránsito, también te alimenta la flora intestinal que controla inmunidad, humor y hasta rendimiento.",
+  "Si estás en volumen: más carbos alrededor del entrenamiento. Si estás en definición: más proteína en todas las comidas. Simple, pero casi nadie lo aplica.",
+  "Una fruta no es postre, es nutriente. Manzana, banana, pera, cítricos. Tenelas siempre a mano para reemplazar snacks procesados.",
+  "Proteína en el desayuno te mata el hambre hasta la tarde. Prueba una semana y vas a sentir la diferencia. Huevos, yogur, atún, queso magro.",
+  "Pesá la comida una semana. Una. Te va a abrir los ojos sobre cuánto estás comiendo realmente. El 'ojímetro' miente.",
+  "Boniato > papa si estás cuidándote. Mismo carbo, más fibra, más micronutrientes, índice glucémico más bajo. Cambio simple, impacto grande.",
+  "Snack nocturno: yogur + proteína + nueces. Si tenés hambre a la noche, no te pelees. Comé algo que te caiga bien y no arruine el día.",
+  "Azúcar agregada: apuntá a menos de 25g por día. No es el diablo, pero el exceso inflama, te sube y baja la energía y te da hambre falsa.",
+  "Entrenás para comer mejor, no comés para entrenar. Si lo vivís como castigo, durás 3 meses. Si lo vivís como combustible, durás toda la vida.",
+  "Sal: 5g por día es el límite saludable. El problema no es el salero, son los ultraprocesados. Fijate las etiquetas, te sorprendés.",
+  "La leche no te hincha si no sos intolerante. Calcio + proteína completa + vitamina D. Si te cae bien, es una de las mejores fuentes baratas.",
+  "Frutos secos: un puñado al día, no toda la bolsa. Nueces, almendras, maní natural. Grasa buena + proteína, pero 600 kcal cada 100g.",
+  "Si no tenés ganas de cocinar, prepará para 3 días de una. Domingo 2 hs de cocina = semana resuelta. El que come mejor es el que se organiza.",
+  "Cena liviana si querés dormir bien. Comida pesada a las 22hs = mala digestión, peor sueño, peor recuperación muscular.",
+  "La banana pre-entreno es un clásico por algo. Carbo rápido, potasio, magnesio. 40 min antes de levantar pesado te salva la vida.",
+  "Yogur natural, no los saborizados. Los saborizados tienen más azúcar que un alfajor. Yogur natural + fruta + miel = postre real y nutritivo.",
+  "Cero refrescos, ni siquiera dietéticos. Agua, infusiones, agua con limón. Los dietéticos también generan antojos y alteran la flora.",
+  "Avena: carbo complejo + fibra + proteína. 50-80g en el desayuno y tenés energía hasta las 12. Barata y versátil.",
+  "Si te saltás el almuerzo por laburo, no compenses con un atracón de noche. Mejor un snack decente: fruta + frutos secos + yogur.",
+  "Vegetales en todas las comidas. Volumen sin calorías, fibra, vitaminas. Llená medio plato de vegetales y el resto se acomoda solo.",
+  "Comer 'limpio' no significa comer poco. Significa comer alimentos que vinieron del campo, no de una fábrica. Después ajustás cantidades.",
+  "Cheat meal sí, cheat day no. Un almuerzo libre por semana no te rompe nada. Un día entero sí te vuela 2500 calorías de más.",
+  "El hambre real espera 15-20 minutos. El antojo no. Si no podés aguantar 20 min sin comer algo, probablemente sea aburrimiento o sed.",
+  "Arroz integral > arroz blanco en definición. Más fibra, más saciedad. Pero el blanco post-entreno es 10 puntos para reponer glucógeno rápido.",
+  "Tu cuerpo necesita grasa para producir testosterona. Dietas ultra-bajas en grasa (menos del 20%) te matan la hormona y la libido.",
+  "Mate: cero calorías, saciante, antioxidante. Si reemplazás dos mates por día por snacks procesados, ahorrás 400 kcal sin esfuerzo.",
+  "Si competís o entrenás fuerte: pesate desnudo, al despertar, después del baño. Siempre mismo horario. Una vez por semana, no todos los días.",
+  "Salmón, atún, sardinas enlatadas. Proteína + omega 3 lista para usar. Ponele limón, palta y tostada integral y tenés un almuerzo fit en 3 minutos.",
+  "La proteína de fuente animal es más completa, pero la vegetal combinada (arroz + lentejas, por ejemplo) también cierra el perfil de aminoácidos.",
+  "Magnesio: lo pierde el 70% de la gente que entrena. Frutos secos, palta, chocolate amargo, legumbres. Si te da calambres, sumá magnesio.",
+  "Las barritas de cereal del súper son caramelos vestidos de fit. Mirá la etiqueta: 20g de azúcar, 5g de proteína. Hacelas en casa y ganás.",
+  "Comer bien no es dieta, es hábito. Dieta dura 3 meses, hábito dura una vida. Apuntá al hábito, no al resultado a corto plazo.",
+  "Pasta integral + atún + aceite de oliva + tomate. 10 minutos, 500 kcal balanceadas, proteína, carbos, grasa buena. Plato de gym toda la vida.",
+  "Si no podés comer después de entrenar por tiempo: un shake con banana y avena. Literalmente 2 minutos. No salgas del gym con hambre.",
+  "El metabolismo no se 'rompe' por comer poco una semana. Se adapta. Volvés a comer normal y se recupera. No hay magia negra.",
+  "Comida real > suplemento. Siempre. Si podés elegir un huevo o una cucharada de whey, elegí el huevo 9 de cada 10 veces.",
+  "Hidratación durante el entreno: 150-250ml cada 15-20 min. Si entrenás más de 60 min, sumale electrolitos. Agua con sal y limón hace el laburo.",
+  "El mejor plan nutricional es el que podés sostener. Si no lo disfrutás, no dura. Permitite placer dentro de la estructura."
+];
+
+const RECETAS = [
+  /* ========== SALADOS ========== */
+  {
+    id: 1, titulo: "Hummus de garbanzos", categoria: "salado", momento: "snack", objetivo: "pre-entreno",
+    tiempoMin: 15, calorias: 180,
+    ingredientes: [
+      "Garbanzos cocidos — 2 tazas",
+      "Jugo de 1 limón",
+      "Ajo — 1 diente",
+      "Comino — ½ cdita",
+      "Tahini (o aceite de oliva) — ¼ taza",
+      "Líquido de cocción — ½ taza",
+      "Sal a gusto"
+    ],
+    preparacion: [
+      "Si no tenés tahini, tostá 2 tazas de semillas de sésamo y procesálas hasta que queden líquidas. Eso es tahini casero, 10 veces más barato que el de dietética.",
+      "Procesá todos los ingredientes hasta obtener una pasta cremosa. Si queda muy espeso, sumá más líquido de cocción de a poco.",
+      "Probá y ajustá sal, limón o comino según tu gusto."
+    ],
+    tipGarde: "Bomba de proteína vegetal y fibra. Ideal para untar en tostadas integrales 1-2 hs antes del entreno. Te da energía sin hincharte. Rinde para 4 días en la heladera y podés freezarlo."
+  },
+  {
+    id: 2, titulo: "Budín de puerro y calabaza", categoria: "salado", momento: "cena", objetivo: "general",
+    tiempoMin: 45, calorias: 260,
+    ingredientes: [
+      "Puerro picado — 1 taza",
+      "Puré de calabaza — 1 taza",
+      "Maicena — 2 cdas",
+      "Leche descremada fría — 1 taza",
+      "Huevos — 2",
+      "Queso fresco descremado — 80g",
+      "Nuez moscada, pimienta, sal"
+    ],
+    preparacion: [
+      "Dorá el puerro en una sartén con un chorrito de aceite de oliva.",
+      "Aparte, disolvé la maicena en la leche fría con un batidor para que no queden grumos.",
+      "Sumá la mezcla al puerro y revolvé sin parar hasta que espese. Condimentá con nuez moscada, pimienta y sal.",
+      "Retirá del fuego, integrá un huevo y volcá en un molde desmontable.",
+      "Cubrí con tiritas de queso fresco, después con el puré de calabaza mezclado con el otro huevo.",
+      "Horno a 180°C por 25-30 min hasta que esté firme."
+    ],
+    tipGarde: "Cena ideal si entrenás temprano al día siguiente. Carbos de calidad + proteína magra + bajo en grasa. La calabaza te repone glucógeno sin hincharte durante la noche."
+  },
+  {
+    id: 3, titulo: "Tarta de zapallitos", categoria: "salado", momento: "almuerzo", objetivo: "general",
+    tiempoMin: 60, calorias: 310,
+    ingredientes: [
+      "Harina integral — 100g",
+      "Aceite de oliva — ¼ taza",
+      "Agua — ¼ taza",
+      "Zapallitos cortados — 1 taza",
+      "Cebolla de verdeo — ½ taza",
+      "Zanahoria en rodajas — a gusto",
+      "Ajo — 3 dientes",
+      "Queso port salut light en cubos — 80g",
+      "Huevos — 2",
+      "Orégano, pimienta, sal"
+    ],
+    preparacion: [
+      "Mezclá la harina con agua, aceite y especias hasta formar una masa homogénea.",
+      "Estirá en un molde de 15 cm y cociná 15 min a 180°C.",
+      "Cortá los zapallitos y la zanahoria, salteálos en sartén hasta que suelten agua.",
+      "Dorá aparte la cebolla de verdeo con el ajo picado.",
+      "En un bowl, mezclá los vegetales, el queso en cubos y los huevos. Rellená la tarta.",
+      "Horno a 180°C por 20 min más, hasta que cuaje."
+    ],
+    tipGarde: "Plato completo para un almuerzo de día libre. Si estás en definición, reducí la masa a la mitad y duplicá el relleno de vegetales y huevo. Así subís proteína y bajás harinas."
+  },
+  {
+    id: 4, titulo: "Falafel de garbanzos", categoria: "salado", momento: "almuerzo", objetivo: "general",
+    tiempoMin: 50, calorias: 290,
+    ingredientes: [
+      "Garbanzos crudos (remojados 24 hs) — 120g",
+      "Perejil o cilantro fresco — 1 puñado",
+      "Ajo — 2 dientes",
+      "Cebolla — ½",
+      "Morrón rojo chico — 1",
+      "Comino — 2 cditas",
+      "Harina de avena — 8 cdas",
+      "Sal y pimienta"
+    ],
+    preparacion: [
+      "Remojá los garbanzos 24 hs, colá y enjuagá.",
+      "Procesá los garbanzos unos minutos. Sumá el resto de ingredientes excepto la harina y volvé a procesar.",
+      "Integrá la harina y procesá hasta unir. Llevá la mezcla a la heladera 1 hora.",
+      "Precalentá el horno a 200°C. Hacé bolitas, aplastalas un poco y acomodálas en una placa con aceite.",
+      "Horneá 30-40 min, dándolos vuelta a los 15."
+    ],
+    tipGarde: "Proteína vegetal real con fibra. Armate una bowl con falafel + arroz + ensalada + salsa de yogur y tenés un almuerzo de 600 kcal con 35g de proteína. De los platos más nutritivos que podés hacer."
+  },
+  {
+    id: 5, titulo: "Hamburguesas de garbanzos", categoria: "salado", momento: "almuerzo", objetivo: "post-entreno",
+    tiempoMin: 40, calorias: 320,
+    ingredientes: [
+      "Garbanzos cocidos — 3 tazas",
+      "Zanahoria rallada — 2 medianas",
+      "Cebolla rallada — ½ grande",
+      "Ajo picado — 3 dientes",
+      "Salvado de avena (o avena) — ½ taza",
+      "Perejil picado — ½ taza",
+      "Jugo de ½ limón",
+      "Comino — 1 cdita",
+      "Cúrcuma — 1 cdita",
+      "Sal y pimienta"
+    ],
+    preparacion: [
+      "Procesá los garbanzos con la cebolla, el ajo, el limón y los condimentos hasta obtener una pasta granulada. No hagas puré.",
+      "Sumá la zanahoria rallada y el perejil. Procesá apenas para integrar.",
+      "Formá las hamburguesas con la mano. Salen unas 6-8 medianas.",
+      "Cociná en sartén antiadherente con un toque de aceite, 4 min por lado hasta que estén doradas."
+    ],
+    tipGarde: "Proteína vegetal + fibra + carbos complejos en un solo plato. Andan bárbaro como post-entreno si entrenás fuerte al mediodía: comételas con ensalada y un huevo encima para cerrar los 30g de proteína. Las podés freezar crudas y tener stock para la semana."
+  },
+  {
+    id: 6, titulo: "Pizza de zanahoria", categoria: "salado", momento: "cena", objetivo: "general",
+    tiempoMin: 35, calorias: 280,
+    ingredientes: [
+      "Zanahorias grandes — 4",
+      "Huevos — 2",
+      "Harina de garbanzos (o avena) — 3 cdas",
+      "Salsa de tomate — a gusto",
+      "Queso fresco — a gusto",
+      "Orégano, ajo en polvo, pimentón, sal"
+    ],
+    preparacion: [
+      "Rallá bien finas las zanahorias y escurrílas con un trapo para sacar el exceso de agua.",
+      "Mezclá con los huevos, la harina y los condimentos.",
+      "Pasá la mezcla a una pizzera aceitada y cociná hasta que el huevo coagule.",
+      "Agregá la salsa, el queso y un toque de orégano. Llevá al horno 5 min más para derretir el queso."
+    ],
+    tipGarde: "La pizza sin culpa. 280 kcal contra 800 de una pizza común. Si comés dos porciones grandes cubrís la cena perfecta en definición. Sumále pollo desmenuzado encima para llevarla a 30g de proteína."
+  },
+  {
+    id: 7, titulo: "Garbanzos crocantes", categoria: "salado", momento: "snack", objetivo: "general",
+    tiempoMin: 50, calorias: 150,
+    ingredientes: [
+      "Garbanzos cocidos (o en lata, bien escurridos) — 2 tazas",
+      "Aceite de oliva — 2 cdas",
+      "Paprika, ajo en polvo, orégano, cúrcuma, sal, pimienta"
+    ],
+    preparacion: [
+      "Precalentá el horno a 200°C.",
+      "Secá muy bien los garbanzos con un repasador. Cuanto más secos, más crocantes quedan.",
+      "Mezclá con el aceite y los condimentos en una placa para horno.",
+      "Horneá 40 min aproximadamente, removiendo cada 10 min, hasta que queden bien crocantes."
+    ],
+    tipGarde: "El mejor reemplazo de las papas fritas. Proteína + fibra + saciedad real, y los podés tener armados en un frasco para toda la semana. Picás cuando tenés hambre y no te mandás una cagada con snacks procesados."
+  },
+  {
+    id: 8, titulo: "Tomates rellenos con quinoa", categoria: "salado", momento: "almuerzo", objetivo: "post-entreno",
+    tiempoMin: 35, calorias: 240,
+    ingredientes: [
+      "Tomates pequeños — 6",
+      "Quinoa cocida — 1 taza",
+      "Morrón — ¼",
+      "Queso fresco — 50g",
+      "Perejil y cilantro picados",
+      "Aceite de oliva, jugo de 1 limón",
+      "Sal y pimienta"
+    ],
+    preparacion: [
+      "Lavá la quinoa 3 veces y cocinala 20 min hasta que se inflen los granos. Colá y reservá.",
+      "Lavá los tomates, cortales una tapa y ahuecálos con cuidado.",
+      "Picá el morrón y las hierbas.",
+      "Mezclá la quinoa con el morrón, el queso en cubos, el perejil y el cilantro. Condimentá con limón, aceite, sal y pimienta.",
+      "Rellená los tomates y dejalos en la heladera hasta el momento de comer."
+    ],
+    tipGarde: "La quinoa es un pseudo-cereal con aminoácidos completos: rara entre las fuentes vegetales. Post-entreno de cardio o hipertrofia moderada, este plato te repone glucógeno y te suma proteína sin ser pesado."
+  },
+  {
+    id: 9, titulo: "Pancito proteico de espinaca", categoria: "salado", momento: "desayuno", objetivo: "pre-entreno",
+    tiempoMin: 15, calorias: 170,
+    ingredientes: [
+      "Huevos — 2",
+      "Espinaca cruda — 2 puñados",
+      "Harina de garbanzos — 2 cdas",
+      "Semillas de chía — 1 cda",
+      "Polvo de hornear — ½ cdita",
+      "Ajo en polvo, sal, pimienta"
+    ],
+    preparacion: [
+      "Licuá todos los ingredientes hasta obtener una pasta verde.",
+      "Verté porciones en una sartén caliente previamente aceitada.",
+      "Dá vuelta cuando se doren de un lado. Rellená con lo que quieras."
+    ],
+    tipGarde: "Desayuno pre-entreno ideal si entrenás temprano. Proteína + hierro vegetal + bajo en grasa. Rellenálos con palta y un huevo para desayuno completo, o con queso y tomate para merienda rápida."
+  },
+  {
+    id: 10, titulo: "Wrap de pollo y palta", categoria: "salado", momento: "almuerzo", objetivo: "post-entreno",
+    tiempoMin: 15, calorias: 430,
+    ingredientes: [
+      "Rap integral — 1 (o tortilla grande)",
+      "Pechuga de pollo grillada — 120g",
+      "Palta — ½",
+      "Tomate — ½",
+      "Hojas verdes (lechuga, rúcula o espinaca)",
+      "Jugo de limón, pimienta, sal"
+    ],
+    preparacion: [
+      "Cortá la pechuga en tiras finas. Si la tenés cruda, grillála con limón, pimienta y un toque de sal 4 min por lado.",
+      "Pisá la palta con jugo de limón y sal. Hace las veces de mayonesa saludable.",
+      "Untá el wrap con la palta, poné las hojas, el tomate en rodajas y el pollo.",
+      "Enrollá bien firme, cortá al medio y listo."
+    ],
+    tipGarde: "Post-entreno clásico: 35g de proteína magra + grasas buenas de la palta + carbos del wrap. Comételo dentro de las 2 hs post-entreno y tenés cubierta la recuperación. Rápido, no hay excusa."
+  },
+  {
+    id: 11, titulo: "Arroz con atún y huevo", categoria: "salado", momento: "almuerzo", objetivo: "post-entreno",
+    tiempoMin: 20, calorias: 480,
+    ingredientes: [
+      "Arroz integral cocido — 1 taza",
+      "Atún al natural — 1 lata (170g)",
+      "Huevos — 2",
+      "Cebolla morada picada — ¼",
+      "Aceite de oliva — 1 cda",
+      "Jugo de limón, pimienta, sal",
+      "Perejil (opcional)"
+    ],
+    preparacion: [
+      "Si no tenés el arroz cocido, herví una taza de arroz integral en 2 tazas de agua con sal, 30 min.",
+      "Herví los huevos 9 min para que queden duros con la yema firme pero no seca.",
+      "Mezclá el arroz tibio con el atún bien escurrido, la cebolla y un chorro de aceite.",
+      "Picá los huevos y sumálos por encima. Terminá con limón, perejil y pimienta."
+    ],
+    tipGarde: "El plato del fisicoculturista de toda la vida, pero hecho decente. 40g de proteína limpia + carbos complejos + omega 3. Si lo armás para el mediodía y entrenás a las 17hs, llegás con pila. Un clásico por algo."
+  },
+  {
+    id: 12, titulo: "Tortilla de claras con vegetales", categoria: "salado", momento: "cena", objetivo: "general",
+    tiempoMin: 15, calorias: 220,
+    ingredientes: [
+      "Claras de huevo — 6 (o 3 huevos enteros + 3 claras)",
+      "Espinaca cruda — 2 puñados",
+      "Cebolla picada — ½",
+      "Morrón en tiritas — ½",
+      "Tomate cherry cortado — 5",
+      "Aceite de oliva, sal, pimienta, ajo en polvo"
+    ],
+    preparacion: [
+      "Salteá la cebolla, el morrón y los cherry en una sartén con un toque de oliva, 3-4 min.",
+      "Sumá la espinaca y cociná 1 min más, hasta que se reduzca.",
+      "Batí las claras (o el mix) con sal y pimienta. Volcá sobre los vegetales.",
+      "Cociná a fuego bajo tapada 3-4 min, y terminá dándola vuelta o bajo el grill."
+    ],
+    tipGarde: "Cena liviana que te llena. 30g de proteína, poca grasa, cero carbos. Si estás en definición y cenaste carbos al mediodía, esta tortilla cierra el día perfecto sin hincharte para dormir."
+  },
+  {
+    id: 13, titulo: "Pollo al horno con boniato", categoria: "salado", momento: "cena", objetivo: "post-entreno",
+    tiempoMin: 50, calorias: 460,
+    ingredientes: [
+      "Pechuga de pollo — 200g",
+      "Boniato (batata) — 1 grande",
+      "Brócoli — ½ planta",
+      "Aceite de oliva — 2 cdas",
+      "Pimentón, ajo en polvo, orégano, sal, pimienta",
+      "Jugo de limón"
+    ],
+    preparacion: [
+      "Precalentá el horno a 200°C. Cortá el boniato en cubos y el brócoli en arbolitos.",
+      "En una placa, mezclá los vegetales con aceite, sal, ajo en polvo y pimentón.",
+      "Condimentá el pollo con limón, sal, pimienta y orégano. Ponelo en la placa junto con los vegetales.",
+      "Horneá 35-40 min. A mitad de cocción, dá vuelta el pollo y remové los vegetales."
+    ],
+    tipGarde: "El plato por excelencia para ganar masa magra. 50g de proteína + carbo complejo + micronutrientes. Armátelo en viandas para 2-3 días y tenés la cena resuelta. El boniato post-entreno pega 10 puntos."
+  },
+  {
+    id: 14, titulo: "Ensalada power", categoria: "salado", momento: "almuerzo", objetivo: "general",
+    tiempoMin: 10, calorias: 380,
+    ingredientes: [
+      "Hojas verdes mix — 3 tazas",
+      "Huevo duro — 2",
+      "Atún al natural — 1 lata",
+      "Palta — ½",
+      "Tomate cherry — 8",
+      "Nueces — 1 puñado chico",
+      "Aceite de oliva, limón, sal, pimienta"
+    ],
+    preparacion: [
+      "Hervir los huevos 9 min, pelar y cortar en cuartos.",
+      "Armá una cama de hojas en el plato. Sumá el atún escurrido, la palta en cubos y los cherry cortados al medio.",
+      "Coroná con los huevos y las nueces.",
+      "Aliñá con aceite, limón, sal y pimienta."
+    ],
+    tipGarde: "Almuerzo completo en 10 min. Cubrís proteína (atún + huevo), grasas buenas (palta + nueces), fibra y micronutrientes. Si querés subir calorías, sumá quinoa o arroz. Si estás en déficit, comé como está."
+  },
+  {
+    id: 15, titulo: "Bowl de quinoa con pollo", categoria: "salado", momento: "almuerzo", objetivo: "post-entreno",
+    tiempoMin: 30, calorias: 520,
+    ingredientes: [
+      "Quinoa cocida — 1 taza",
+      "Pechuga de pollo grillada — 150g",
+      "Zapallo asado en cubos — ½ taza",
+      "Espinaca cruda — 1 puñado",
+      "Palta — ¼",
+      "Semillas de sésamo — 1 cdita",
+      "Aceite de oliva, limón, sal, pimienta"
+    ],
+    preparacion: [
+      "Cociná la quinoa si no la tenés lista: 20 min en agua con sal, 1 taza de quinoa por 2 de agua.",
+      "Asá el zapallo en cubos en el horno 25 min a 200°C con un toque de oliva y sal.",
+      "Grillá el pollo con limón, sal y pimienta 4-5 min por lado. Dejalo reposar 3 min y cortalo en tiras.",
+      "Armá el bowl: base de quinoa, cama de espinaca, pollo, zapallo y palta. Terminá con sésamo, aceite y limón."
+    ],
+    tipGarde: "El plato post-entreno ideal si entrenás pesado: 50g de proteína + carbos de calidad + grasas buenas. La quinoa + el zapallo reponen glucógeno de forma limpia. Te lo comés caliente o frío, rinde igual."
+  },
+  {
+    id: 16, titulo: "Omelette de avena salado", categoria: "salado", momento: "desayuno", objetivo: "pre-entreno",
+    tiempoMin: 12, calorias: 340,
+    ingredientes: [
+      "Huevos — 2",
+      "Claras — 2",
+      "Avena instantánea — 3 cdas",
+      "Queso fresco rallado — 30g",
+      "Espinaca o tomate picado",
+      "Sal, pimienta, ajo en polvo"
+    ],
+    preparacion: [
+      "Batí los huevos con las claras, la avena y los condimentos. Dejá reposar 2 min para que la avena absorba.",
+      "Volcá en una sartén antiadherente caliente con un toque de aceite. Cociná a fuego medio.",
+      "Cuando empiece a cuajar, sumá el queso y la espinaca o tomate por encima.",
+      "Plegá al medio y terminá 1 min más. Listo."
+    ],
+    tipGarde: "Desayuno pre-entreno definitivo. 30g de proteína + carbos complejos de la avena. Te da energía estable para 2-3 hs sin picos de insulina. Si entrenás a las 9 y desayunás a las 7, llegás perfecto."
+  },
+  {
+    id: 17, titulo: "Salmón al horno con vegetales", categoria: "salado", momento: "cena", objetivo: "general",
+    tiempoMin: 30, calorias: 480,
+    ingredientes: [
+      "Filet de salmón — 180g",
+      "Espárragos — 8-10",
+      "Tomates cherry — 10",
+      "Calabacín (zucchini) — 1",
+      "Aceite de oliva — 2 cdas",
+      "Limón, ajo picado, eneldo, sal, pimienta"
+    ],
+    preparacion: [
+      "Precalentá el horno a 200°C.",
+      "Cortá el zucchini en medialunas y acomodá junto con los espárragos y los cherry en una placa. Condimentá con oliva, ajo, sal y pimienta.",
+      "Colocá el salmón encima o al costado. Bañalo con limón, aceite, sal y eneldo.",
+      "Horneá 15-18 min. El salmón está listo cuando se desmenuza con tenedor."
+    ],
+    tipGarde: "Omega 3 en dosis fuerte. Reduce inflamación, mejora recuperación muscular y es proteína magra premium. Si podés sumarlo 2 veces por semana a tu dieta, tu rendimiento y tu físico lo agradecen."
+  },
+
+  /* ========== DULCES ========== */
+  {
+    id: 18, titulo: "Panqueques de avena y banana", categoria: "dulce", momento: "desayuno", objetivo: "pre-entreno",
+    tiempoMin: 12, calorias: 290,
+    ingredientes: [
+      "Huevos — 2",
+      "Avena instantánea — 4 cdas",
+      "Banana madura — 1",
+      "Esencia de vainilla — 1 cdita",
+      "Canela (opcional)"
+    ],
+    preparacion: [
+      "Licuá todos los ingredientes hasta obtener una mezcla homogénea.",
+      "Verté porciones en una sartén caliente previamente aceitada.",
+      "Dá vuelta cuando hagan burbujitas de un lado, 2 min por lado.",
+      "Sumá lo que quieras arriba: frutos rojos, pasta de maní, coco rallado, canela."
+    ],
+    tipGarde: "El desayuno pre-entreno más usado por el gym. Carbo rápido de la banana + carbo lento de la avena + proteína del huevo. Combinación ganadora. 1 hora antes de entrenar te da energía sin pesarte el estómago."
+  },
+  {
+    id: 19, titulo: "Galletitas de avena, banana y choco", categoria: "dulce", momento: "snack", objetivo: "pre-entreno",
+    tiempoMin: 25, calorias: 140,
+    ingredientes: [
+      "Avena instantánea — 1 taza",
+      "Bananas maduras — 2",
+      "Pasta de maní — 1 cda",
+      "Aceite — 1 cda",
+      "Miel — 1 cda",
+      "Chips de chocolate amargo — ¼ taza",
+      "Esencia de vainilla — 1 cdita"
+    ],
+    preparacion: [
+      "Precalentá el horno a 180°C.",
+      "Pisá las bananas hasta hacerlas puré.",
+      "Mezclá con todos los ingredientes en un bowl. Dejá reposar 10 min para que la avena se hidrate.",
+      "Con una cuchara, formá galletitas en una placa aceitada.",
+      "Horneá 10-15 min hasta que se doren los bordes. Dejá enfriar antes de sacar."
+    ],
+    tipGarde: "Snack pre-entreno perfecto para llevar en la mochila. 2 galletitas = 280 kcal de energía rápida. Cero conservantes, cero azúcar agregada. Hacélas los domingos y tenés snack para toda la semana."
+  },
+  {
+    id: 20, titulo: "Budín de avena y banana", categoria: "dulce", momento: "merienda", objetivo: "general",
+    tiempoMin: 50, calorias: 220,
+    ingredientes: [
+      "Harina de avena — 1 taza",
+      "Huevos — 3",
+      "Azúcar mascabo (o miel) — 3 cdas",
+      "Bananas maduras — 2",
+      "Pasta de maní (o aceite) — 1 cda",
+      "Esencia de vainilla — 1 cda",
+      "Polvo de hornear — 1 cda",
+      "Chips de chocolate semiamargo (opcional)"
+    ],
+    preparacion: [
+      "Mezclá los huevos con el azúcar hasta que quede homogéneo.",
+      "Sumá la banana pisada, la pasta de maní y la vainilla.",
+      "Integrá el polvo de hornear y después la harina de avena con movimientos envolventes.",
+      "Sumá los chips si usás.",
+      "Horno a temperatura mínima, 40-45 min. La clave es el fuego bajo para que quede húmedo por dentro."
+    ],
+    tipGarde: "Merienda que hace creer a tu paladar que estás comiendo algo prohibido. 1 porción = 220 kcal, 8g de proteína. Acompañá con un té verde o café y tenés la merienda ideal antes del entreno."
+  },
+  {
+    id: 21, titulo: "Pote de chía con frutillas y kiwi", categoria: "dulce", momento: "desayuno", objetivo: "post-entreno",
+    tiempoMin: 10, calorias: 380,
+    ingredientes: [
+      "Yogur natural — 125g",
+      "Semillas de chía — 30g",
+      "Coco rallado — 60g",
+      "Frutillas — 100g",
+      "Kiwi — 1",
+      "Almendras laminadas — 30g",
+      "Miel o stevia (opcional)"
+    ],
+    preparacion: [
+      "Mezclá las semillas de chía con el coco, el yogur y la miel. Dejá reposar mínimo 1 hora en la heladera (ideal toda la noche).",
+      "Cortá las frutillas y el kiwi en rodajas.",
+      "Armá el pote: mezcla de chía base, encima la fruta, y coroná con almendras laminadas."
+    ],
+    tipGarde: "Post-entreno de primera. Proteína del yogur + omega 3 de la chía + antioxidantes de la fruta + grasas buenas de las almendras. Si lo dejás listo la noche anterior, desayunás en 30 segundos."
+  },
+  {
+    id: 22, titulo: "Tostadas francesas fit", categoria: "dulce", momento: "desayuno", objetivo: "general",
+    tiempoMin: 10, calorias: 250,
+    ingredientes: [
+      "Pan integral — 2 rebanadas",
+      "Huevo — 1",
+      "Miel o stevia — 1 cdita",
+      "Canela — pizca",
+      "Esencia de vainilla — 1 cdita",
+      "Frutas, ricotta o queso untable (para acompañar)"
+    ],
+    preparacion: [
+      "Batí el huevo con la miel, la canela y la vainilla.",
+      "Sumergí las rebanadas de pan en la mezcla, empapándolas bien de ambos lados.",
+      "Cociná en sartén a fuego mínimo con apenas un toque de aceite, 2 min por lado.",
+      "Sumá encima lo que quieras: frutos rojos, banana en rodajas, ricotta con miel, pasas."
+    ],
+    tipGarde: "La versión decente del clásico de hotel. Las típicas llevan azúcar, manteca y pan blanco; estas no. Desayuno dulce sin salirte de la dieta. Perfecto día de descanso o pre-cardio suave."
+  },
+  {
+    id: 23, titulo: "Bowl de avena pre-entreno", categoria: "dulce", momento: "desayuno", objetivo: "pre-entreno",
+    tiempoMin: 8, calorias: 420,
+    ingredientes: [
+      "Avena instantánea — 60g",
+      "Leche (o bebida vegetal) — 200ml",
+      "Banana — 1",
+      "Café espresso — 1 pocillo",
+      "Pasta de maní — 1 cda",
+      "Canela, cacao amargo (opcional)"
+    ],
+    preparacion: [
+      "Cociná la avena con la leche en microondas 2 min (o a fuego bajo en olla 5 min).",
+      "Sumá la banana en rodajas, la pasta de maní, canela y cacao si usás.",
+      "Preparate un café espresso y tomátelo con el bowl. Listo: combustible puro."
+    ],
+    tipGarde: "El desayuno secreto del levantador de pesas. Carbos complejos + carbos rápidos + cafeína + proteína + grasas. Comételo 60-90 min antes de entrenar fuerte y vas a sentir la diferencia en las series pesadas. Probado mil veces."
+  },
+  {
+    id: 24, titulo: "Smoothie post-entreno", categoria: "dulce", momento: "snack", objetivo: "post-entreno",
+    tiempoMin: 5, calorias: 380,
+    ingredientes: [
+      "Banana — 1",
+      "Leche (o bebida vegetal) — 300ml",
+      "Avena — 3 cdas",
+      "Cacao amargo en polvo — 1 cda",
+      "Pasta de maní — 1 cda",
+      "Miel — 1 cdita (opcional)",
+      "Hielo"
+    ],
+    preparacion: [
+      "Tirá todo en la licuadora.",
+      "Procesá 30-40 segundos hasta que quede cremoso.",
+      "Tomátelo dentro de los 60 min post-entreno."
+    ],
+    tipGarde: "El shake post-entreno de toda la vida hecho con comida real. 25g de proteína + carbos rápidos y lentos = recuperación muscular óptima. Si querés más proteína, sumá 1 scoop de whey y lo llevás a 50g. Imbatible."
+  },
+  {
+    id: 25, titulo: "Yogur proteico con granola casera", categoria: "dulce", momento: "merienda", objetivo: "general",
+    tiempoMin: 5, calorias: 310,
+    ingredientes: [
+      "Yogur natural descremado — 200g",
+      "Granola casera — 40g",
+      "Frutos rojos — 1 puñado",
+      "Miel — 1 cdita",
+      "Semillas de chía — 1 cdita"
+    ],
+    preparacion: [
+      "Serví el yogur en un bowl.",
+      "Sumá la granola por encima, los frutos rojos, las semillas y un toque de miel.",
+      "Para la granola casera: mezclá avena con frutos secos, miel y canela, y horneá 20 min a 150°C."
+    ],
+    tipGarde: "Merienda post-siesta o media tarde. 20g de proteína + fibra + antioxidantes. Controlá la granola: la del súper tiene azúcar agregada y aceites baratos. Haceela en casa y te garantizás que sea comida real."
+  },
+  {
+    id: 26, titulo: "Barritas caseras de avena y dátil", categoria: "dulce", momento: "snack", objetivo: "pre-entreno",
+    tiempoMin: 30, calorias: 180,
+    ingredientes: [
+      "Avena instantánea — 1 ½ taza",
+      "Dátiles sin carozo — 10",
+      "Pasta de maní — 3 cdas",
+      "Miel — 2 cdas",
+      "Nueces o almendras picadas — ½ taza",
+      "Chips de chocolate amargo (opcional) — 2 cdas"
+    ],
+    preparacion: [
+      "Procesá los dátiles hasta hacer una pasta.",
+      "Mezclá en un bowl los dátiles con la avena, la pasta de maní, la miel y los frutos secos. Si te cuesta unir, sumá una cda de agua.",
+      "Volcá la mezcla en una fuente forrada con papel manteca. Presioná bien para compactar.",
+      "Llevá al freezer 30 min, sacá y cortá en 8-10 barritas. Guardá en heladera."
+    ],
+    tipGarde: "Energía pura para el entreno. 30 min antes de ir al gym, una barrita te arma. Duran 1 semana en heladera o 1 mes freezadas. Cero conservantes, cero azúcar refinada. Las barritas compradas no te llegan ni a los talones."
+  },
+  {
+    id: 27, titulo: "Mousse de chocolate proteico", categoria: "dulce", momento: "merienda", objetivo: "post-entreno",
+    tiempoMin: 10, calorias: 190,
+    ingredientes: [
+      "Clara de huevo pasteurizada — 3 (o 1 yogur natural + 1 banana)",
+      "Cacao amargo — 2 cdas",
+      "Banana madura — 1",
+      "Miel o stevia — 1 cdita",
+      "Esencia de vainilla — ½ cdita"
+    ],
+    preparacion: [
+      "Pisá la banana bien hasta que quede puré.",
+      "Batí las claras a nieve firme.",
+      "Mezclá en un bowl el cacao, la banana pisada, la miel y la vainilla.",
+      "Incorporá las claras con movimientos envolventes, sin batir para no perder aire.",
+      "Llevá a la heladera 2 hs antes de servir."
+    ],
+    tipGarde: "Postre que engaña al cerebro. 20g de proteína, menos de 200 kcal y sabor a chocolate real. Ideal para el antojo dulce de la noche sin romper la dieta. Si le sumás whey de chocolate, la mousse te queda de otro nivel."
+  },
+  {
+    id: 28, titulo: "Rice pudding proteico", categoria: "dulce", momento: "merienda", objetivo: "post-entreno",
+    tiempoMin: 25, calorias: 320,
+    ingredientes: [
+      "Arroz cocido — 1 taza",
+      "Leche (o bebida vegetal) — 400ml",
+      "Canela — 1 rama o 1 cdita",
+      "Miel o edulcorante — 2 cdas",
+      "Esencia de vainilla — 1 cdita",
+      "Pasas de uva — 2 cdas (opcional)",
+      "Whey vainilla (opcional) — 1 scoop"
+    ],
+    preparacion: [
+      "Poné el arroz, la leche, la canela y la miel en una olla a fuego bajo.",
+      "Cociná revolviendo 15-20 min hasta que la leche se reduzca y quede cremoso.",
+      "Sacá del fuego, sumá la vainilla y las pasas. Dejá entibiar.",
+      "Si usás whey, integralo cuando ya esté tibio (nunca caliente, se te corta la proteína)."
+    ],
+    tipGarde: "Post-entreno reconfortante. Carbos + proteína en un postre que parece trampa y no lo es. Si entrenás a la noche y querés algo dulce antes de dormir, este te recupera sin caerte pesado."
+  },
+  {
+    id: 29, titulo: "Bombones de dátil y cacao", categoria: "dulce", momento: "snack", objetivo: "pre-entreno",
+    tiempoMin: 15, calorias: 110,
+    ingredientes: [
+      "Dátiles sin carozo — 10",
+      "Pasta de maní — 3 cdas",
+      "Cacao amargo en polvo — 2 cdas",
+      "Coco rallado — para rebozar",
+      "Pizca de sal"
+    ],
+    preparacion: [
+      "Procesá los dátiles hasta hacer una pasta pegajosa.",
+      "Mezclá con la pasta de maní, el cacao y la sal. Si queda muy blando, llevá 10 min al freezer.",
+      "Hacé bolitas del tamaño de un bombón.",
+      "Rebozá en coco rallado. Guardá en heladera."
+    ],
+    tipGarde: "Dulces de verdad sin culpa. 2 bombones = 220 kcal de energía limpia. Los llevás al gym en un tupper y piqueás antes de entrenar. El maní suma proteína y grasas buenas que te mantienen con energía estable."
+  },
+  {
+    id: 30, titulo: "Muffins de banana y avena", categoria: "dulce", momento: "merienda", objetivo: "general",
+    tiempoMin: 35, calorias: 160,
+    ingredientes: [
+      "Bananas maduras — 3",
+      "Huevos — 2",
+      "Avena instantánea — 2 tazas",
+      "Miel — 3 cdas",
+      "Polvo de hornear — 1 cdita",
+      "Esencia de vainilla — 1 cdita",
+      "Canela — 1 cdita",
+      "Nueces picadas o chips de chocolate (opcional)"
+    ],
+    preparacion: [
+      "Precalentá el horno a 180°C.",
+      "Pisá las bananas, integrá con los huevos y la miel.",
+      "Sumá la avena, la canela, la vainilla y el polvo de hornear. Dejá reposar 5 min.",
+      "Integrá las nueces o chips si usás.",
+      "Volcá en moldes de muffins (salen 10-12). Horneá 20-25 min hasta que estén dorados."
+    ],
+    tipGarde: "Preparalos el domingo y tenés merienda resuelta toda la semana. Cada uno tiene 6g de proteína, fibra real y cero azúcar agregada (solo la de la banana y la miel). Duran 5 días en heladera o un mes freezados."
+  }
+];
+
+let filtroCategoria = 'todas';
+let filtroMomento = 'todos';
+let filtroObjetivo = 'todos';
+
+function getTipDelDia() {
+  const ahora = new Date();
+  const inicioAño = new Date(ahora.getFullYear(), 0, 0);
+  const diff = ahora - inicioAño;
+  const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24));
+  return TIPS_DEL_DIA[dayOfYear % TIPS_DEL_DIA.length];
+}
+
+function labelMomento(m) {
+  return ({desayuno:'Desayuno',almuerzo:'Almuerzo',merienda:'Merienda',cena:'Cena',snack:'Snack'})[m] || m;
+}
+function labelObjetivo(o) {
+  return ({'pre-entreno':'Pre-entreno','post-entreno':'Post-entreno','general':'General'})[o] || o;
+}
+function labelCategoria(c) {
+  return ({salado:'Salado',dulce:'Dulce'})[c] || c;
+}
+
+function recetasFiltradas() {
+  return RECETAS.filter(r => {
+    if (filtroCategoria !== 'todas' && r.categoria !== filtroCategoria) return false;
+    if (filtroMomento !== 'todos' && r.momento !== filtroMomento) return false;
+    if (filtroObjetivo !== 'todos' && r.objetivo !== filtroObjetivo) return false;
+    return true;
+  });
+}
+
+function renderNutricion() {
+  const el = document.getElementById('nutricion-content');
+  const tip = getTipDelDia();
+
+  const tipHtml = `
+    <div class="tip-card">
+      <div class="tip-hdr">
+        <span class="tip-ico">💡</span>
+        <span class="tip-title">Tip del día</span>
+      </div>
+      <div class="tip-body">${tip}</div>
+    </div>`;
+
+  const fCat = ['todas','salado','dulce'];
+  const fMom = ['todos','desayuno','almuerzo','merienda','cena','snack'];
+  const fObj = ['todos','pre-entreno','post-entreno','general'];
+
+  const filtrosHtml = `
+    <div class="filter-label">Categoría</div>
+    <div class="filter-row">
+      ${fCat.map(c => `<button class="fchip ${filtroCategoria===c?'on':''}" onclick="setFiltro('cat','${c}')">${c==='todas'?'Todas':labelCategoria(c)}</button>`).join('')}
+    </div>
+    <div class="filter-label">Momento</div>
+    <div class="filter-row">
+      ${fMom.map(m => `<button class="fchip ${filtroMomento===m?'on':''}" onclick="setFiltro('mom','${m}')">${m==='todos'?'Todos':labelMomento(m)}</button>`).join('')}
+    </div>
+    <div class="filter-label">Objetivo</div>
+    <div class="filter-row">
+      ${fObj.map(o => `<button class="fchip ${filtroObjetivo===o?'on':''}" onclick="setFiltro('obj','${o}')">${o==='todos'?'Todos':labelObjetivo(o)}</button>`).join('')}
+    </div>`;
+
+  const recs = recetasFiltradas();
+  const listHtml = recs.length === 0
+    ? '<div class="empty"><div class="empty-icon">🍽️</div><div style="font-size:14px">Sin recetas con esos filtros</div><div style="font-size:12px;color:#555;margin-top:6px">Probá con otra combinación</div></div>'
+    : recs.map(r => `
+      <div class="rec-card" onclick="openReceta(${r.id})">
+        <div class="rec-title">${r.titulo}</div>
+        <div class="rec-badges">
+          <span class="rec-badge">${labelCategoria(r.categoria)}</span>
+          <span class="rec-badge">${labelMomento(r.momento)}</span>
+          <span class="rec-badge obj">${labelObjetivo(r.objetivo)}</span>
+        </div>
+        <div class="rec-meta">
+          <span>⏱ ${r.tiempoMin} min</span>
+          <span>🔥 ~${r.calorias} kcal</span>
+        </div>
+      </div>`).join('');
+
+  el.innerHTML = `
+    <div class="slbl2">Nutrición</div>
+    ${tipHtml}
+    ${filtrosHtml}
+    <div style="margin-top:14px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:10px;letter-spacing:2px;color:#555;text-transform:uppercase;margin-bottom:10px">${recs.length} receta${recs.length===1?'':'s'}</div>
+    ${listHtml}
+    <div class="nutri-disclaimer">Contenido educativo general. Para un plan personalizado consultá con un Lic. en Nutrición.</div>
+  `;
+}
+
+function setFiltro(tipo, valor) {
+  if (tipo === 'cat') filtroCategoria = valor;
+  if (tipo === 'mom') filtroMomento = valor;
+  if (tipo === 'obj') filtroObjetivo = valor;
+  renderNutricion();
+}
+
+function openReceta(id) {
+  const r = RECETAS.find(x => x.id === id);
+  if (!r) return;
+  document.getElementById('rec-modal-ttl').textContent = r.titulo;
+  document.getElementById('rec-modal-body').innerHTML = `
+    <div class="rec-modal-title">${r.titulo}</div>
+    <div class="rec-modal-badges">
+      <span class="rec-badge">${labelCategoria(r.categoria)}</span>
+      <span class="rec-badge">${labelMomento(r.momento)}</span>
+      <span class="rec-badge obj">${labelObjetivo(r.objetivo)}</span>
+    </div>
+    <div class="rec-modal-meta">
+      <div class="rec-modal-meta-item">
+        <div class="rec-modal-meta-val">${r.tiempoMin}</div>
+        <div class="rec-modal-meta-lbl">Minutos</div>
+      </div>
+      <div class="rec-modal-meta-item">
+        <div class="rec-modal-meta-val">~${r.calorias}</div>
+        <div class="rec-modal-meta-lbl">Kcal / porción</div>
+      </div>
+    </div>
+    <div class="rec-section-ttl">Ingredientes</div>
+    <div class="rec-ing-list">
+      ${r.ingredientes.map(i => `<div class="rec-ing"><span class="rec-ing-dot">●</span><span>${i}</span></div>`).join('')}
+    </div>
+    <div class="rec-section-ttl">Preparación</div>
+    <div class="rec-prep-list">
+      ${r.preparacion.map(p => `<div class="rec-prep"><div class="rec-prep-txt">${p}</div></div>`).join('')}
+    </div>
+    <div class="rec-tip-garde">
+      <div class="rec-tip-hdr">
+        <span style="font-size:18px">💪</span>
+        <span class="rec-tip-ttl">Tip Garde</span>
+      </div>
+      <div class="rec-tip-body">${r.tipGarde}</div>
+    </div>
+    <div class="nutri-disclaimer">Contenido educativo general. Para un plan personalizado consultá con un Lic. en Nutrición.</div>
+  `;
+  document.getElementById('rec-modal').classList.add('show');
+  document.getElementById('rec-modal-body').scrollTop = 0;
+}
+
+function closeReceta() {
+  document.getElementById('rec-modal').classList.remove('show');
+}
+</script>
+</body>
+</html>
